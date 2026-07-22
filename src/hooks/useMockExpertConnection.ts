@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { ChatMessage } from '@/lib/types';
-import {
-  MOCK_EXPERT_DELAY_MIN,
-  MOCK_EXPERT_DELAY_MAX,
-} from '@/lib/constants';
+import type { ChatMessage, PersistedState } from '@/lib/types';
+import { loadState, saveState } from '@/lib/storage';
+import { createDefaultPersistedState } from '@/lib/types';
+import { MOCK_EXPERT_DELAY_MIN, MOCK_EXPERT_DELAY_MAX } from '@/lib/constants';
 
 interface UseMockExpertConnectionReturn {
   messages: ChatMessage[];
@@ -18,10 +17,34 @@ interface UseMockExpertConnectionReturn {
 
 function getRandomDelay(): number {
   return (
-    Math.floor(
-      Math.random() * (MOCK_EXPERT_DELAY_MAX - MOCK_EXPERT_DELAY_MIN + 1),
-    ) + MOCK_EXPERT_DELAY_MIN
+    Math.floor(Math.random() * (MOCK_EXPERT_DELAY_MAX - MOCK_EXPERT_DELAY_MIN + 1)) +
+    MOCK_EXPERT_DELAY_MIN
   );
+}
+
+function loadPersistedState(storageKey: 'scoping' | 'qa'): {
+  messages: ChatMessage[];
+  step: number;
+} {
+  const persisted = loadState();
+  if (!persisted) return { messages: [], step: 0 };
+
+  if (storageKey === 'scoping') {
+    return { messages: persisted.scopingChat, step: persisted.scopingStep };
+  }
+  return { messages: persisted.qaChat, step: persisted.qaStep };
+}
+
+function persistState(storageKey: 'scoping' | 'qa', messages: ChatMessage[], step: number): void {
+  const existing = loadState() ?? createDefaultPersistedState();
+  const state: PersistedState = {
+    ...existing,
+    scopingChat: storageKey === 'scoping' ? messages : existing.scopingChat,
+    qaChat: storageKey === 'qa' ? messages : existing.qaChat,
+    scopingStep: storageKey === 'scoping' ? step : existing.scopingStep,
+    qaStep: storageKey === 'qa' ? step : existing.qaStep,
+  };
+  saveState(state);
 }
 
 /**
@@ -29,6 +52,10 @@ function getRandomDelay(): number {
  *
  * Takes a script of ChatMessages and emits them one by one with
  * artificial delays (1.5-3s) to simulate network latency.
+ *
+ * Optionally accepts a `storageKey` ('scoping' | 'qa') to persist
+ * conversation state to localStorage, so conversations survive page
+ * refreshes and resume at the last step.
  *
  * - Expert messages auto-emit after a delay
  * - User messages wait for sendMessage() or simulateSpeech()
@@ -42,14 +69,20 @@ function getRandomDelay(): number {
  */
 export function useMockExpertConnection(
   script: ChatMessage[],
+  storageKey?: 'scoping' | 'qa',
   initialStep = 0,
 ): UseMockExpertConnectionReturn {
-  const [emittedMessages, setEmittedMessages] = useState<ChatMessage[]>(() =>
-    script.slice(0, initialStep),
-  );
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  // Initialize from localStorage if a storageKey is provided
+  const persisted = storageKey ? loadPersistedState(storageKey) : null;
+  const initialMessages =
+    persisted && persisted.messages.length > 0 ? persisted.messages : script.slice(0, initialStep);
+  const initialStepValue =
+    persisted && persisted.messages.length > 0 ? persisted.step : initialStep;
+
+  const [emittedMessages, setEmittedMessages] = useState<ChatMessage[]>(initialMessages);
+  const [currentStep, setCurrentStep] = useState(initialStepValue);
   const [isTyping, setIsTyping] = useState(false);
-  const [isComplete, setIsComplete] = useState(initialStep >= script.length);
+  const [isComplete, setIsComplete] = useState(initialStepValue >= script.length);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scriptRef = useRef(script);
   const mountedRef = useRef(true);
@@ -60,6 +93,12 @@ export function useMockExpertConnection(
   useEffect(() => {
     scriptRef.current = script;
   }, [script]);
+
+  // Persist to localStorage whenever messages or step change
+  useEffect(() => {
+    if (!storageKey) return;
+    persistState(storageKey, emittedMessages, currentStep);
+  }, [emittedMessages, currentStep, storageKey]);
 
   // Reset mounted flag on every effect run (handles React StrictMode
   // double-invocation in dev: the cleanup sets mountedRef and
@@ -97,10 +136,7 @@ export function useMockExpertConnection(
       if (processingRef.current !== step) return; // Stale timer guard
 
       const message = scriptRef.current[step];
-      setEmittedMessages((prev) => [
-        ...prev,
-        { ...message, timestamp: Date.now() },
-      ]);
+      setEmittedMessages((prev) => [...prev, { ...message, timestamp: Date.now() }]);
       setIsTyping(false);
       processingRef.current = null;
 
@@ -179,14 +215,16 @@ export function useMockExpertConnection(
     setCurrentStep(0);
     setIsTyping(false);
     setIsComplete(false);
-  }, []);
+
+    // Clear persisted state
+    if (storageKey) {
+      persistState(storageKey, [], 0);
+    }
+  }, [storageKey]);
 
   return {
     messages: emittedMessages,
-    currentMessage:
-      emittedMessages.length > 0
-        ? emittedMessages[emittedMessages.length - 1]
-        : null,
+    currentMessage: emittedMessages.length > 0 ? emittedMessages[emittedMessages.length - 1] : null,
     isTyping,
     isComplete,
     sendMessage,

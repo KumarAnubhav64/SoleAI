@@ -12,18 +12,14 @@ interface QATabProps {
   isComplete: boolean;
 }
 
-export default function QATab({
-  onComplete,
-  isSubmitting,
-  isComplete,
-}: QATabProps) {
+export default function QATab({ onComplete, isSubmitting, isComplete }: QATabProps) {
   const {
     messages,
     isTyping,
     isComplete: chatComplete,
     sendMessage,
     simulateSpeech,
-  } = useMockExpertConnection(qaScript as ChatMessage[]);
+  } = useMockExpertConnection(qaScript as ChatMessage[], 'qa');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -39,8 +35,7 @@ export default function QATab({
       </div>
       <div className="flex items-center justify-between border-t border-slate-800 px-4 py-3">
         <p className="text-xs text-slate-600">
-          Answer the Remote Expert&apos;s follow-up questions to complete the
-          job.
+          Answer the Remote Expert&apos;s follow-up questions to complete the job.
         </p>
         <TabActionButton
           tabId={'qa' as TabId}

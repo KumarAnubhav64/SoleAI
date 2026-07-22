@@ -46,9 +46,7 @@ describe('useMockExpertConnection', () => {
 
   describe('initial state', () => {
     it('should start with empty messages and not typing when script is empty', () => {
-      const { result } = renderHook(() =>
-        useMockExpertConnection([]),
-      );
+      const { result } = renderHook(() => useMockExpertConnection([]));
 
       expect(result.current.messages).toEqual([]);
       expect(result.current.currentMessage).toBeNull();
@@ -101,10 +99,7 @@ describe('useMockExpertConnection', () => {
     });
 
     it('should emit multiple expert messages in sequence', () => {
-      const script = [
-        createExpertMessage(0, 'First'),
-        createExpertMessage(1, 'Second'),
-      ];
+      const script = [createExpertMessage(0, 'First'), createExpertMessage(1, 'Second')];
 
       const { result } = renderHook(() => useMockExpertConnection(script));
 
@@ -228,9 +223,7 @@ describe('useMockExpertConnection', () => {
         result.current.simulateSpeech();
       });
 
-      const userMsg = result.current.messages.find(
-        (m) => m.sender === 'user',
-      );
+      const userMsg = result.current.messages.find((m) => m.sender === 'user');
       expect(userMsg?.text).toBe(userAnswer);
       expect(result.current.currentStep).toBe(2);
 
@@ -298,9 +291,7 @@ describe('useMockExpertConnection', () => {
 
   describe('resume from step', () => {
     it('should emit past messages instantly when resuming from a step', () => {
-      const { result } = renderHook(() =>
-        useMockExpertConnection(scopingScript, 2),
-      );
+      const { result } = renderHook(() => useMockExpertConnection(scopingScript, undefined, 2));
 
       // Past messages should be emitted instantly
       expect(result.current.messages).toHaveLength(2);
@@ -313,9 +304,7 @@ describe('useMockExpertConnection', () => {
     });
 
     it('should start typing when resuming at an expert message', () => {
-      const { result } = renderHook(() =>
-        useMockExpertConnection(scopingScript, 5),
-      );
+      const { result } = renderHook(() => useMockExpertConnection(scopingScript, undefined, 5));
 
       // Past messages (0-4) should be emitted instantly
       expect(result.current.messages).toHaveLength(5);
@@ -326,9 +315,7 @@ describe('useMockExpertConnection', () => {
     });
 
     it('should complete normally after resuming', () => {
-      const { result } = renderHook(() =>
-        useMockExpertConnection(scopingScript, 5),
-      );
+      const { result } = renderHook(() => useMockExpertConnection(scopingScript, undefined, 5));
 
       // Past messages emitted, current is expert
       act(() => {
@@ -386,9 +373,7 @@ describe('useMockExpertConnection', () => {
 
   describe('full conversation flow', () => {
     it('should complete the full scoping conversation', () => {
-      const { result } = renderHook(() =>
-        useMockExpertConnection(scopingScript),
-      );
+      const { result } = renderHook(() => useMockExpertConnection(scopingScript));
 
       // Expert: Greeting
       act(() => vi.advanceTimersByTime(MOCK_EXPERT_DELAY_MIN + 100));
@@ -414,9 +399,7 @@ describe('useMockExpertConnection', () => {
       // Next: user message - simulate speech
       act(() => result.current.simulateSpeech());
       expect(result.current.messages).toHaveLength(5);
-      expect(result.current.messages[4].text).toBe(
-        'Does that help with the issue?',
-      );
+      expect(result.current.messages[4].text).toBe('Does that help with the issue?');
       expect(result.current.messages[4].sender).toBe('user');
 
       // Next: expert final message

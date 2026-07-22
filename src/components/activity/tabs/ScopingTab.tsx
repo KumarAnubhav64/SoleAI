@@ -12,18 +12,14 @@ interface ScopingTabProps {
   isComplete: boolean;
 }
 
-export default function ScopingTab({
-  onComplete,
-  isSubmitting,
-  isComplete,
-}: ScopingTabProps) {
+export default function ScopingTab({ onComplete, isSubmitting, isComplete }: ScopingTabProps) {
   const {
     messages,
     isTyping,
     isComplete: chatComplete,
     sendMessage,
     simulateSpeech,
-  } = useMockExpertConnection(scopingScript as ChatMessage[]);
+  } = useMockExpertConnection(scopingScript as ChatMessage[], 'scoping');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

@@ -1,11 +1,12 @@
 'use client';
 
-import { useRef, useEffect, useCallback, useReducer } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
 import { DotsThree, SpeakerHigh, SpeakerSlash, CheckCircle } from '@phosphor-icons/react';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useHydratedValue } from '@/hooks/useHydratedValue';
 import type { ChatMessage } from '@/lib/types';
 
 interface ChatPanelProps {
@@ -39,13 +40,9 @@ export function ChatPanel({
     toggleMute,
   } = useTextToSpeech({ rate: 0.9, pitch: 1.0 });
 
-  // Hydration-safe TTS support: initialize as true so server & client first render match.
-  // After mount, correct to actual browser capability.
-  // useReducer dispatch is stable and not flagged by react-hooks/set-state-in-effect
-  const [ttsAvailable, dispatchTts] = useReducer((_: boolean, v: boolean) => v, true);
-  useEffect(() => {
-    dispatchTts(ttsSupported);
-  }, [ttsSupported]);
+  // Hydration-safe TTS support: render as 'available' on server & first client paint,
+  // then correct to the real browser capability after hydration.
+  const ttsAvailable = useHydratedValue(ttsSupported, true);
 
   // Flush pending speech when user interacts
   const handleUserInteraction = useCallback(() => {

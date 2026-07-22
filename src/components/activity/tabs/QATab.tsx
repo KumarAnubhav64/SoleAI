@@ -4,7 +4,7 @@ import { ChatPanel } from '@/components/activity/ChatPanel';
 import { TabActionButton } from '@/components/activity/TabActionButton';
 import { useMockExpertConnection } from '@/hooks/useMockExpertConnection';
 import qaScript from '@/data/qa-script.json';
-import type { TabId, ChatMessage } from '@/lib/types';
+import type { ChatMessage } from '@/lib/types';
 
 interface QATabProps {
   onComplete: () => void;
@@ -38,7 +38,6 @@ export default function QATab({ onComplete, isSubmitting, isComplete }: QATabPro
           Answer the Remote Expert&apos;s follow-up questions to complete the job.
         </p>
         <TabActionButton
-          tabId={'qa' as TabId}
           isLastTab={true}
           isComplete={isComplete}
           onComplete={onComplete}

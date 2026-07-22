@@ -4,7 +4,7 @@ import { ChatPanel } from '@/components/activity/ChatPanel';
 import { TabActionButton } from '@/components/activity/TabActionButton';
 import { useMockExpertConnection } from '@/hooks/useMockExpertConnection';
 import scopingScript from '@/data/scoping-script.json';
-import type { TabId, ChatMessage } from '@/lib/types';
+import type { ChatMessage } from '@/lib/types';
 
 interface ScopingTabProps {
   onComplete: () => void;
@@ -38,7 +38,6 @@ export default function ScopingTab({ onComplete, isSubmitting, isComplete }: Sco
           Discuss the issue with the Remote Expert to scope the problem.
         </p>
         <TabActionButton
-          tabId={'scoping' as TabId}
           isLastTab={false}
           isComplete={isComplete}
           onComplete={onComplete}

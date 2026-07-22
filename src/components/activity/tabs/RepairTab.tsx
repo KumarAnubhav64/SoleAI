@@ -2,7 +2,6 @@
 
 import { RecordingControls } from '@/components/activity/RecordingControls';
 import { TabActionButton } from '@/components/activity/TabActionButton';
-import type { TabId } from '@/lib/types';
 
 interface RepairTabProps {
   stream: MediaStream | null;
@@ -20,12 +19,10 @@ export default function RepairTab({
   return (
     <div className="flex h-full flex-col p-4">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-100">
-          Repair Documentation
-        </h3>
+        <h3 className="text-sm font-semibold text-slate-100">Repair Documentation</h3>
         <p className="mt-1 text-xs text-slate-500">
-          Record yourself performing the repair. Describe the steps you are
-          taking for the documentation.
+          Record yourself performing the repair. Describe the steps you are taking for the
+          documentation.
         </p>
       </div>
 
@@ -34,11 +31,8 @@ export default function RepairTab({
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-800 pt-4">
-        <p className="text-xs text-slate-600">
-          Record a video documenting your repair process.
-        </p>
+        <p className="text-xs text-slate-600">Record a video documenting your repair process.</p>
         <TabActionButton
-          tabId={'repair' as TabId}
           isLastTab={false}
           isComplete={isComplete}
           onComplete={onComplete}

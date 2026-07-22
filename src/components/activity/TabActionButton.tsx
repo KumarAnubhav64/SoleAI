@@ -3,10 +3,8 @@
 import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import type { TabId } from '@/lib/types';
 
 interface TabActionButtonProps {
-  tabId: TabId;
   isLastTab: boolean;
   isComplete?: boolean;
   onComplete: () => void;
@@ -15,7 +13,6 @@ interface TabActionButtonProps {
 }
 
 export function TabActionButton({
-  tabId: _tabId, // eslint-disable-line @typescript-eslint/no-unused-vars
   isLastTab,
   isComplete = false,
   onComplete,
@@ -34,10 +31,7 @@ export function TabActionButton({
   const label = isLastTab ? 'Finish Job' : 'Complete & Continue';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}>
       <Button
         onClick={onComplete}
         disabled={disabled || isLoading}

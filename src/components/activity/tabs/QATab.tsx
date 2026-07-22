@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ChatPanel } from '@/components/activity/ChatPanel';
 import { TabActionButton } from '@/components/activity/TabActionButton';
 import { useMockExpertConnection } from '@/hooks/useMockExpertConnection';
 import qaScript from '@/data/qa-script.json';
 import type { ChatMessage } from '@/lib/types';
+import { useChatContext } from '@/components/activity/ChatContext';
 
 interface QATabProps {
   onComplete: () => void;
@@ -20,6 +22,18 @@ export default function QATab({ onComplete, isSubmitting, isComplete }: QATabPro
     sendMessage,
     simulateSpeech,
   } = useMockExpertConnection(qaScript as ChatMessage[], 'qa');
+
+  const { syncChatState } = useChatContext();
+
+  // Sync chat state to the right panel context
+  useEffect(() => {
+    syncChatState({
+      messages,
+      isTyping,
+      isComplete: chatComplete,
+      title: 'Quality Assurance',
+    });
+  }, [messages, isTyping, chatComplete, syncChatState]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ChatPanel } from '@/components/activity/ChatPanel';
 import { TabActionButton } from '@/components/activity/TabActionButton';
 import { useMockExpertConnection } from '@/hooks/useMockExpertConnection';
 import scopingScript from '@/data/scoping-script.json';
 import type { ChatMessage } from '@/lib/types';
+import { useChatContext } from '@/components/activity/ChatContext';
 
 interface ScopingTabProps {
   onComplete: () => void;
@@ -20,6 +22,18 @@ export default function ScopingTab({ onComplete, isSubmitting, isComplete }: Sco
     sendMessage,
     simulateSpeech,
   } = useMockExpertConnection(scopingScript as ChatMessage[], 'scoping');
+
+  const { syncChatState } = useChatContext();
+
+  // Sync chat state to the right panel context
+  useEffect(() => {
+    syncChatState({
+      messages,
+      isTyping,
+      isComplete: chatComplete,
+      title: 'Scoping Assessment',
+    });
+  }, [messages, isTyping, chatComplete, syncChatState]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

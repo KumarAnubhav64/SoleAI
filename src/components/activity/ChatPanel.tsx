@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
@@ -29,6 +29,8 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastSpokenRef = useRef<string | null>(null);
+  const userInteractedRef = useRef(false);
+  const pendingSpeechRef = useRef<string | null>(null);
   const {
     speak,
     isSpeaking,
@@ -36,6 +38,17 @@ export function ChatPanel({
     isMuted,
     toggleMute,
   } = useTextToSpeech({ rate: 0.9, pitch: 1.0 });
+
+  // Flush pending speech when user interacts
+  const handleUserInteraction = useCallback(() => {
+    if (!userInteractedRef.current) {
+      userInteractedRef.current = true;
+      if (pendingSpeechRef.current) {
+        speak(pendingSpeechRef.current);
+        pendingSpeechRef.current = null;
+      }
+    }
+  }, [speak]);
 
   // Auto-scroll when new messages arrive
   useEffect(() => {
@@ -45,6 +58,9 @@ export function ChatPanel({
   }, [messages, isTyping]);
 
   // Auto-speak new expert messages via TTS
+  // Chrome blocks speechSynthesis without a prior user gesture.
+  // If the user hasn't clicked yet, queue the text and speak it
+  // on the first interaction.
   useEffect(() => {
     if (messages.length === 0) return;
 
@@ -53,11 +69,17 @@ export function ChatPanel({
     if (lastMessage.id === lastSpokenRef.current) return;
 
     lastSpokenRef.current = lastMessage.id;
-    speak(lastMessage.text);
+
+    if (userInteractedRef.current) {
+      speak(lastMessage.text);
+    } else {
+      // Queue for when user first interacts
+      pendingSpeechRef.current = lastMessage.text;
+    }
   }, [messages, speak]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col" onClick={handleUserInteraction}>
       {/* Header with TTS toggle */}
       <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-950/40 px-4 py-2.5">
         <div className="flex items-center gap-2.5">
@@ -68,7 +90,10 @@ export function ChatPanel({
         </div>
         {ttsSupported && (
           <button
-            onClick={toggleMute}
+            onClick={() => {
+              handleUserInteraction();
+              toggleMute();
+            }}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
               isMuted
                 ? 'border-slate-800 text-slate-600 hover:border-slate-700 hover:text-slate-400'

@@ -83,7 +83,7 @@ test.describe('Full Happy Path', () => {
 
     // Verify the chat panel renders with empty state
     await expect(
-      page.getByText('Waiting for the Remote Expert to connect...'),
+      page.getByText(/Connecting to Remote Expert/i),
     ).toBeVisible({ timeout: 10_000 });
 
     // Verify the TTS Voice toggle is present

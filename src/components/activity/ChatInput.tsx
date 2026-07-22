@@ -35,24 +35,26 @@ export function ChatInput({
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <input
-        ref={inputRef}
-        id="chat-input"
-        name="chat-input"
-        type="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={isTyping ? 'Expert is typing...' : 'Type your response...'}
-        disabled={disabled || isTyping}
-        className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 transition-colors focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-      />
+      <div className="relative flex flex-1 items-center">
+        <input
+          ref={inputRef}
+          id="chat-input"
+          name="chat-input"
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={isTyping ? 'Expert is typing...' : 'Type your response...'}
+          disabled={disabled || isTyping}
+          className="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3.5 py-2.5 pl-4 text-sm text-slate-100 placeholder-slate-600 shadow-inner transition-all duration-200 focus:border-blue-500/50 focus:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:shadow-blue-500/5 disabled:cursor-not-allowed disabled:opacity-50"
+        />
+      </div>
       <Button
         type="button"
         onClick={onSimulateSpeech}
         disabled={disabled || isTyping}
         variant="secondary"
         size="sm"
-        className="gap-1.5 text-xs"
+        className="gap-1.5 rounded-xl border border-slate-700/50 bg-slate-800/50 px-3 text-xs font-medium text-slate-400 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200"
         title="Simulate speech-to-text"
       >
         <Microphone size={14} />
@@ -62,9 +64,9 @@ export function ChatInput({
         type="submit"
         disabled={!text.trim() || disabled || isTyping}
         size="sm"
-        className="gap-1.5"
+        className="gap-1.5 rounded-xl px-3 shadow-sm transition-all duration-200"
       >
-        <PaperPlaneRight size={14} weight="bold" />
+        <PaperPlaneRight size={15} weight="bold" />
       </Button>
     </form>
   );

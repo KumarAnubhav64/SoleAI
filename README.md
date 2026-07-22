@@ -26,16 +26,16 @@ Then navigate through the 4-phase flow:
 
 ### Tech Stack
 
-| Concern | Choice | Rationale |
-|---|---|---|
-| **Framework** | Next.js 16.3+ (App Router), TypeScript `strict: true` | Required by assignment |
-| **UI** | Tailwind CSS v4 + shadcn/ui | Fast to build, copy-in components |
-| **Animation** | `motion/react` (Framer Motion) | UI transitions, micro-interactions |
-| **Icons** | `@phosphor-icons/react` | Single family, standardized stroke |
-| **Fonts** | `Geist` + `Geist Mono` via `next/font` | Modern, clean sans-serif |
-| **State (cross-phase)** | Cookies (route-guard flags) + localStorage (payload) | Middleware can't read localStorage |
-| **Testing** | Vitest + React Testing Library + Playwright | Fast, native ESM, E2E capability |
-| **CI** | GitHub Actions (lint, typecheck, test) | Automated quality gates |
+| Concern                 | Choice                                                | Rationale                          |
+| ----------------------- | ----------------------------------------------------- | ---------------------------------- |
+| **Framework**           | Next.js 16.3+ (App Router), TypeScript `strict: true` | Required by assignment             |
+| **UI**                  | Tailwind CSS v4 + shadcn/ui                           | Fast to build, copy-in components  |
+| **Animation**           | `motion/react` (Framer Motion)                        | UI transitions, micro-interactions |
+| **Icons**               | `@phosphor-icons/react`                               | Single family, standardized stroke |
+| **Fonts**               | `Geist` + `Geist Mono` via `next/font`                | Modern, clean sans-serif           |
+| **State (cross-phase)** | Cookies (route-guard flags) + localStorage (payload)  | Middleware can't read localStorage |
+| **Testing**             | Vitest + React Testing Library + Playwright           | Fast, native ESM, E2E capability   |
+| **CI**                  | GitHub Actions (lint, typecheck, test)                | Automated quality gates            |
 
 ### Server vs. Client Component Boundary
 
@@ -141,6 +141,7 @@ npx vitest run __tests__/hooks/useMockExpertConnection.test.ts
 ```
 
 **113 tests across 8 files**, covering:
+
 - `lib/storage.ts` — localStorage read/write/error handling
 - `lib/guards.ts` — Route protection edge cases
 - `useMockExpertConnection` — State machine, scripted emits, resume-on-remount
@@ -164,6 +165,7 @@ npx playwright test --update-snapshots
 ```
 
 **4 E2E tests** covering the full happy path:
+
 1. Phase 1-2: Config → Prep navigation with equipment selection
 2. Phase 2-3: Activity workspace with chat interaction (expert message → Simulate Speech → response)
 3. Activity → Performance completion screen
@@ -179,17 +181,20 @@ npx playwright test --update-snapshots
 ## Key Features
 
 ### Phase 1 — Job Configuration
+
 - Selectable card grid for equipment type and severity
 - Server Action saves config to localStorage + sets cookie flag
 - Redirects to prep on completion
 
 ### Phase 2 — Pre-Deployment Briefing
+
 - Dynamic safety instructions based on selected equipment
 - 30-second countdown timer with auto-redirect
 - Camera/microphone permission request with graceful denial handling
 - "Skip & Proceed" button to advance early
 
 ### Phase 3 — Support Workspace
+
 - Split-screen layout (chat panel + expert sidebar)
 - 3 sequential lockable tabs: Scoping → Repair → QA
 - Mock expert chat with 1.5–3s artificial delays
@@ -198,6 +203,7 @@ npx playwright test --update-snapshots
 - 10-minute global timer with auto-redirect on expiry
 
 ### Phase 4 — Performance Analysis
+
 - Completion confirmation with job summary card
 - "New Mission" link to restart
 
@@ -207,16 +213,16 @@ No secrets are required for the current implementation. A `.env.local.example` f
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript check |
-| `npm test` | Run Vitest unit tests |
-| `npm run test:e2e` | Run Playwright E2E tests |
-| `npm run format` | Format with Prettier |
+| Command             | Description              |
+| ------------------- | ------------------------ |
+| `npm run dev`       | Start development server |
+| `npm run build`     | Production build         |
+| `npm start`         | Start production server  |
+| `npm run lint`      | Run ESLint               |
+| `npm run typecheck` | Run TypeScript check     |
+| `npm test`          | Run Vitest unit tests    |
+| `npm run test:e2e`  | Run Playwright E2E tests |
+| `npm run format`    | Format with Prettier     |
 
 ## Architecture Decisions
 

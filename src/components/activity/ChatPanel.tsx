@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
@@ -38,6 +38,13 @@ export function ChatPanel({
     isMuted,
     toggleMute,
   } = useTextToSpeech({ rate: 0.9, pitch: 1.0 });
+
+  // Detect client-side hydration without triggering set-state-in-effect lint
+  const isHydrated = useSyncExternalStore(
+    () => () => {}, // subscribe — noop
+    () => true, // getSnapshot — client always returns true
+    () => false, // getServerSnapshot — server returns false
+  );
 
   // Flush pending speech when user interacts
   const handleUserInteraction = useCallback(() => {
@@ -88,7 +95,7 @@ export function ChatPanel({
           </span>
           <p className="text-xs font-semibold tracking-wide text-slate-300">{title}</p>
         </div>
-        {ttsSupported && (
+        {isHydrated && ttsSupported && (
           <button
             onClick={() => {
               handleUserInteraction();

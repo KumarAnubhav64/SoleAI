@@ -93,8 +93,9 @@ export function useTextToSpeech(options: UseTextToSpeechOptions = {}): UseTextTo
       };
 
       utterance.onerror = (e) => {
-        // Chrome sometimes fires 'interrupted' errors from cancel() — ignore those
-        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+        // Chrome fires 'interrupted'/'canceled' from cancel() — ignore those
+        // 'synthesis-failed' is a known Chrome Linux bug with no workaround
+        if (e.error !== 'interrupted' && e.error !== 'canceled' && e.error !== 'synthesis-failed') {
           console.warn('Speech synthesis error:', e.error);
         }
         if (mountedRef.current) {

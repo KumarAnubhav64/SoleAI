@@ -27,7 +27,7 @@ export default function ScopingTab({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <ChatPanel
           messages={messages}
           isTyping={isTyping}

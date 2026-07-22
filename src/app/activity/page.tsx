@@ -20,7 +20,7 @@ export default function ActivityPage() {
   }, [router]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Split-screen workspace */}
       <div className="flex flex-1 flex-col lg:flex-row">
         {/* Left Panel — Tab Content */}

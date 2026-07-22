@@ -87,7 +87,7 @@ export function TabContainer({ stream, onAllComplete }: TabContainerProps) {
   const currentTab = activeTab || 'scoping';
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Tab Headers */}
       <div className="flex gap-1.5 border-b border-slate-800 px-3 py-2">
         {TAB_ORDER.map((tabId) => (

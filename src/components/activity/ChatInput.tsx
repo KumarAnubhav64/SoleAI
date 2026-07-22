@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { PaperPlaneRight, Microphone, MicrophoneSlash } from '@phosphor-icons/react';
+import { PaperPlaneRight, Microphone } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useSpeechToText } from '@/hooks/useSpeechToText';
 
@@ -22,10 +22,9 @@ export function ChatInput({
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const {
+    status: sttStatus,
     isListening,
-    isSupported: sttSupported,
     transcript,
-    error: sttError,
     startListening,
     stopListening,
     reset: resetStt,
@@ -76,9 +75,10 @@ export function ChatInput({
     }
   };
 
-  // STT not supported or errored: show disabled Voice button with tooltip
-  const sttUnavailable = !sttSupported || !!sttError;
-  const sttTooltip = !sttSupported ? 'Voice input not supported on this browser' : sttError;
+  // STT status from silent on-mount probe
+  const sttProbing = sttStatus === 'probing';
+  const sttUnavailable = sttStatus === 'unavailable';
+  const sttReady = sttStatus === 'ready';
 
   return (
     <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
@@ -106,16 +106,18 @@ export function ChatInput({
       <motion.div layout transition={{ duration: 0.15 }}>
         <Button
           type="button"
-          onClick={sttUnavailable ? onSimulateSpeech : handleMicClick}
-          disabled={sttUnavailable ? false : disabled || isTyping}
-          variant={isListening ? 'default' : sttUnavailable ? 'secondary' : 'secondary'}
+          onClick={sttReady ? handleMicClick : onSimulateSpeech}
+          disabled={sttProbing || disabled || isTyping}
+          variant={isListening ? 'default' : 'secondary'}
           size="sm"
           title={
-            sttUnavailable
-              ? (sttTooltip ?? 'Voice input unavailable')
-              : isListening
-                ? 'Stop listening'
-                : 'Start voice input'
+            sttProbing
+              ? 'Checking voice support...'
+              : sttUnavailable
+                ? 'Voice input not supported on this browser'
+                : isListening
+                  ? 'Stop listening'
+                  : 'Start voice input'
           }
           className={`gap-1.5 rounded-xl px-3 text-xs font-medium shadow-sm backdrop-blur-sm transition-all duration-200 ${
             isListening
@@ -136,7 +138,9 @@ export function ChatInput({
           ) : (
             <>
               <Microphone size={14} />
-              <span className="hidden sm:inline">{sttUnavailable ? 'Unavailable' : 'Voice'}</span>
+              <span className="hidden sm:inline">
+                {sttProbing ? '...' : sttUnavailable ? 'Unavailable' : 'Voice'}
+              </span>
             </>
           )}
         </Button>
@@ -151,13 +155,6 @@ export function ChatInput({
       >
         <PaperPlaneRight size={15} weight="bold" />
       </Button>
-
-      {/* STT error tooltip */}
-      {sttError && (
-        <p className="absolute bottom-full left-0 mb-1 rounded-md bg-red-500/10 px-2 py-1 text-[10px] text-red-400">
-          {sttError}
-        </p>
-      )}
     </form>
   );
 }

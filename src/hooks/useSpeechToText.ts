@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useReducer } from 'react';
 
 // Type declarations for the Web Speech API SpeechRecognition
-// These aren't included in standard DOM type libs for all browsers
 interface SpeechRecognitionEvent {
   resultIndex: number;
   results: SpeechRecognitionResultList;
@@ -46,42 +45,68 @@ interface SpeechRecognitionInstance {
 
 type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 
+export type SttStatus = 'probing' | 'ready' | 'unavailable';
+
 interface UseSpeechToTextReturn {
-  /** Whether the browser is currently listening */
+  /** Current STT status: probing → ready or unavailable */
+  status: SttStatus;
+  /** Whether the browser is currently listening for speech */
   isListening: boolean;
-  /** Whether SpeechRecognition is available in this browser */
-  isSupported: boolean;
   /** The most recently recognized transcript */
   transcript: string;
-  /** Error message if recognition failed */
-  error: string | null;
   /** Start listening for speech */
   startListening: () => void;
   /** Stop listening and return any final transcript */
   stopListening: () => void;
-  /** Reset transcript and error */
+  /** Reset transcript */
   reset: () => void;
 }
 
+type Action =
+  | { type: 'SET_STATUS'; status: SttStatus }
+  | { type: 'SET_LISTENING'; listening: boolean }
+  | { type: 'SET_TRANSCRIPT'; transcript: string }
+  | { type: 'RESET_TRANSCRIPT' };
+
+interface State {
+  status: SttStatus;
+  isListening: boolean;
+  transcript: string;
+}
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'SET_STATUS':
+      return { ...state, status: action.status };
+    case 'SET_LISTENING':
+      return { ...state, isListening: action.listening };
+    case 'SET_TRANSCRIPT':
+      return { ...state, transcript: action.transcript };
+    case 'RESET_TRANSCRIPT':
+      return { ...state, transcript: '' };
+    default:
+      return state;
+  }
+}
+
 /**
- * A hook that wraps the browser's Web Speech API SpeechRecognition
- * for real-time speech-to-text transcription.
+ * A hook that wraps the browser's Web Speech API SpeechRecognition.
  *
- * Uses `webkitSpeechRecognition` for Chrome/Edge compatibility.
- * Requires a secure context (HTTPS) or localhost.
+ * On mount, performs a silent 3-second probe to determine if the
+ * API actually works (Chrome yes, Brave no) without showing errors.
  *
- * Returns partial (interim) results while the user is speaking,
- * and a final transcript when speech ends or is stopped manually.
+ * States: probing (initial check) → ready or unavailable
  */
 export function useSpeechToText(): UseSpeechToTextReturn {
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(reducer, {
+    status: 'probing',
+    isListening: false,
+    transcript: '',
+  });
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const mountedRef = useRef(true);
 
-  // Check browser support for webkitSpeechRecognition
   const SpeechRecognitionCtor: SpeechRecognitionConstructor | undefined =
     typeof window !== 'undefined'
       ? ((window as unknown as { webkitSpeechRecognition?: SpeechRecognitionConstructor })
@@ -90,9 +115,64 @@ export function useSpeechToText(): UseSpeechToTextReturn {
           .SpeechRecognition)
       : undefined;
 
-  const isSupported = SpeechRecognitionCtor !== undefined;
+  const hasCtor = SpeechRecognitionCtor !== undefined;
 
-  // Cleanup on unmount
+  // ── Silent probe on mount ───────────────────────────────────────
+  useEffect(() => {
+    if (!hasCtor || !SpeechRecognitionCtor) {
+      dispatch({ type: 'SET_STATUS', status: 'unavailable' });
+      return;
+    }
+
+    let settled = false;
+
+    const settle = (result: SttStatus) => {
+      if (settled || !mountedRef.current) return;
+      settled = true;
+      dispatch({ type: 'SET_STATUS', status: result });
+    };
+
+    try {
+      const probe = new SpeechRecognitionCtor();
+      probe.continuous = false;
+      probe.interimResults = false;
+      probe.lang = 'en-US';
+      probe.maxAlternatives = 1;
+
+      probe.onerror = () => settle('unavailable');
+      probe.onstart = () => {
+        settle('ready');
+        try {
+          probe.abort();
+        } catch {
+          // Ignore abort errors
+        }
+      };
+
+      probe.onend = () => {
+        if (!settled && mountedRef.current) {
+          settle('ready');
+        }
+      };
+
+      const timeoutId = setTimeout(() => settle('unavailable'), 3000);
+
+      probe.start();
+
+      return () => {
+        clearTimeout(timeoutId);
+        try {
+          probe.abort();
+        } catch {
+          // Ignore
+        }
+      };
+    } catch {
+      settle('unavailable');
+    }
+  }, [hasCtor, SpeechRecognitionCtor]);
+
+  // ── Cleanup on unmount ──────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -101,7 +181,7 @@ export function useSpeechToText(): UseSpeechToTextReturn {
         try {
           recognitionRef.current.abort();
         } catch {
-          // Ignore abort errors on unmount
+          // Ignore
         }
         recognitionRef.current = null;
       }
@@ -109,12 +189,8 @@ export function useSpeechToText(): UseSpeechToTextReturn {
   }, []);
 
   const startListening = useCallback(() => {
-    if (!isSupported || !SpeechRecognitionCtor) {
-      setError('Speech recognition is not supported in this browser.');
-      return;
-    }
+    if (state.status !== 'ready' || !SpeechRecognitionCtor) return;
 
-    // Abort any existing recognition session
     if (recognitionRef.current) {
       try {
         recognitionRef.current.abort();
@@ -123,8 +199,7 @@ export function useSpeechToText(): UseSpeechToTextReturn {
       }
     }
 
-    setError(null);
-    setTranscript('');
+    dispatch({ type: 'RESET_TRANSCRIPT' });
 
     try {
       const recognition = new SpeechRecognitionCtor();
@@ -135,7 +210,7 @@ export function useSpeechToText(): UseSpeechToTextReturn {
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
-        if (mountedRef.current) setIsListening(true);
+        if (mountedRef.current) dispatch({ type: 'SET_LISTENING', listening: true });
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -144,80 +219,54 @@ export function useSpeechToText(): UseSpeechToTextReturn {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
-            // Final transcript — use it directly
             if (mountedRef.current) {
-              setTranscript(result[0].transcript);
+              dispatch({ type: 'SET_TRANSCRIPT', transcript: result[0].transcript });
             }
             return;
           }
-          // Interim results — show as the user speaks
           interimTranscript += result[0].transcript;
         }
 
         if (mountedRef.current) {
-          setTranscript(interimTranscript);
+          dispatch({ type: 'SET_TRANSCRIPT', transcript: interimTranscript });
         }
       };
 
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        if (!mountedRef.current) return;
-
-        switch (event.error) {
-          case 'no-speech':
-            setError('No speech detected. Please try again.');
-            break;
-          case 'audio-capture':
-            setError('No microphone found. Please check your microphone.');
-            break;
-          case 'not-allowed':
-            setError('Microphone access was denied. Please allow microphone permissions.');
-            break;
-          case 'network':
-            setError('Network error occurred during speech recognition.');
-            break;
-          default:
-            setError(`Speech recognition error: ${event.error}`);
-        }
-        setIsListening(false);
+      recognition.onerror = () => {
+        if (mountedRef.current) dispatch({ type: 'SET_LISTENING', listening: false });
       };
 
       recognition.onend = () => {
-        if (mountedRef.current) setIsListening(false);
+        if (mountedRef.current) dispatch({ type: 'SET_LISTENING', listening: false });
       };
 
       recognitionRef.current = recognition;
       recognition.start();
-    } catch (err) {
-      if (mountedRef.current) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        setError(`Failed to start speech recognition: ${message}`);
-        setIsListening(false);
-      }
+    } catch {
+      if (mountedRef.current) dispatch({ type: 'SET_LISTENING', listening: false });
     }
-  }, [isSupported, SpeechRecognitionCtor]);
+  }, [state.status, SpeechRecognitionCtor]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch {
-        // Ignore stop errors
+        // Ignore
       }
       recognitionRef.current = null;
     }
-    setIsListening(false);
+    dispatch({ type: 'SET_LISTENING', listening: false });
   }, []);
 
   const reset = useCallback(() => {
-    setTranscript('');
-    setError(null);
+    dispatch({ type: 'RESET_TRANSCRIPT' });
   }, []);
 
   return {
-    isListening,
-    isSupported,
-    transcript,
-    error,
+    status: state.status,
+    isListening: state.isListening,
+    transcript: state.transcript,
     startListening,
     stopListening,
     reset,

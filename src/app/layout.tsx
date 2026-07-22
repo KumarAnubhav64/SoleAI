@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 import { NavigationBar } from '@/components/layout/NavigationBar';
 import { NavigationBarLoading } from '@/components/layout/NavigationBarLoading';
 import { Suspense } from 'react';
+import { Toaster } from 'sonner';
 
 export default function RootLayout({
   children,
@@ -37,6 +38,14 @@ export default function RootLayout({
           <NavigationBar />
         </Suspense>
         <main className="flex-1 flex flex-col">{children}</main>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{
+            style: { fontSize: '0.875rem', borderRadius: '0.75rem' },
+          }}
+        />
       </body>
     </html>
   );

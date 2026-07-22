@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useReducer } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
@@ -38,6 +38,14 @@ export function ChatPanel({
     isMuted,
     toggleMute,
   } = useTextToSpeech({ rate: 0.9, pitch: 1.0 });
+
+  // Hydration-safe TTS support: initialize as true so server & client first render match.
+  // After mount, correct to actual browser capability.
+  // useReducer dispatch is stable and not flagged by react-hooks/set-state-in-effect
+  const [ttsAvailable, dispatchTts] = useReducer((_: boolean, v: boolean) => v, true);
+  useEffect(() => {
+    dispatchTts(ttsSupported);
+  }, [ttsSupported]);
 
   // Flush pending speech when user interacts
   const handleUserInteraction = useCallback(() => {
@@ -88,49 +96,46 @@ export function ChatPanel({
           </span>
           <p className="text-xs font-semibold tracking-wide text-slate-300">{title}</p>
         </div>
-        {/* suppressHydrationWarning prevents mismatch from server/client
-            branching in useTextToSpeech (typeof window check) */}
-        <div suppressHydrationWarning>
-          <button
-            onClick={() => {
-              handleUserInteraction();
-              toggleMute();
-            }}
-            disabled={!ttsSupported}
-            title={
-              ttsSupported
-                ? isMuted
-                  ? 'Unmute voice'
-                  : 'Mute voice'
-                : 'Text-to-speech not supported on this browser'
-            }
-            aria-label={
-              ttsSupported
-                ? isMuted
-                  ? 'Enable text-to-speech'
-                  : 'Disable text-to-speech'
-                : 'Text-to-speech unavailable'
-            }
-            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
-              !ttsSupported
-                ? 'border-slate-800 text-slate-700 cursor-not-allowed'
-                : isMuted
-                  ? 'border-slate-800 text-slate-600 hover:border-slate-700 hover:text-slate-400'
-                  : isSpeaking
-                    ? 'border-blue-500/30 bg-blue-500/10 text-blue-400'
-                    : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
-            }`}
-          >
-            {isMuted || !ttsSupported ? (
-              <SpeakerSlash size={13} />
-            ) : (
-              <SpeakerHigh size={13} weight={isSpeaking ? 'fill' : 'regular'} />
-            )}
-            <span className="hidden sm:inline">
-              {!ttsSupported ? 'N/A' : isMuted ? 'Muted' : isSpeaking ? 'Speaking...' : 'Speak'}
-            </span>
-          </button>
-        </div>
+        {/* TTS toggle button */}
+        <button
+          onClick={() => {
+            handleUserInteraction();
+            toggleMute();
+          }}
+          disabled={!ttsAvailable}
+          title={
+            ttsAvailable
+              ? isMuted
+                ? 'Unmute voice'
+                : 'Mute voice'
+              : 'Text-to-speech not supported on this browser'
+          }
+          aria-label={
+            ttsAvailable
+              ? isMuted
+                ? 'Enable text-to-speech'
+                : 'Disable text-to-speech'
+              : 'Text-to-speech unavailable'
+          }
+          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+            !ttsAvailable
+              ? 'border-slate-800 text-slate-700 cursor-not-allowed'
+              : isMuted
+                ? 'border-slate-800 text-slate-600 hover:border-slate-700 hover:text-slate-400'
+                : isSpeaking
+                  ? 'border-blue-500/30 bg-blue-500/10 text-blue-400'
+                  : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+          }`}
+        >
+          {isMuted || !ttsAvailable ? (
+            <SpeakerSlash size={13} />
+          ) : (
+            <SpeakerHigh size={13} weight={isSpeaking ? 'fill' : 'regular'} />
+          )}
+          <span className="hidden sm:inline">
+            {!ttsAvailable ? 'N/A' : isMuted ? 'Muted' : isSpeaking ? 'Speaking...' : 'Speak'}
+          </span>
+        </button>
       </div>
 
       {/* Messages */}

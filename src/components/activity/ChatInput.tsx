@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import { PaperPlaneRight, Microphone } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
@@ -79,6 +80,20 @@ export function ChatInput({
   const sttProbing = sttStatus === 'probing';
   const sttUnavailable = sttStatus === 'unavailable';
   const sttReady = sttStatus === 'ready';
+
+  // Show a toast notification when STT is unavailable
+  const sttNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (sttUnavailable && !sttNotifiedRef.current) {
+      sttNotifiedRef.current = true;
+      toast.warning(
+        'Voice input not available on this browser. Click the Voice button to use simulated speech instead.',
+        {
+          duration: 5000,
+        },
+      );
+    }
+  }, [sttUnavailable]);
 
   return (
     <form onSubmit={handleSubmit} className="relative flex items-center gap-2">

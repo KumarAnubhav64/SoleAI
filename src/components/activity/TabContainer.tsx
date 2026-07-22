@@ -101,7 +101,7 @@ export function TabContainer({ stream, onAllComplete }: TabContainerProps) {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentTab}
@@ -109,7 +109,7 @@ export function TabContainer({ stream, onAllComplete }: TabContainerProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.15, ease: 'easeInOut' }}
-            className="h-full"
+            className="flex min-h-0 flex-1 flex-col"
           >
             {currentTab === 'scoping' && (
               <ScopingTab

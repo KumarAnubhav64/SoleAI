@@ -1,16 +1,25 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
-export async function saveJobConfig(formData: FormData) {
-  const equipmentType = formData.get('equipmentType') as string;
-  const severity = formData.get('severity') as string;
-
-  // Store job config for Phase 2
+export async function saveJobConfig(
+  equipmentType: string,
+  severity: string,
+): Promise<{ success: true }> {
   const config = { equipmentType, severity };
-  (await cookies()).set('jobConfig', JSON.stringify(config));
-  (await cookies()).set('configComplete', 'true');
+  const cookieStore = await cookies();
+  cookieStore.set('jobConfig', JSON.stringify(config), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
+  cookieStore.set('configComplete', 'true', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
 
-  redirect('/prep');
+  return { success: true };
 }

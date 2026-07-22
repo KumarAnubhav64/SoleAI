@@ -6,6 +6,7 @@ import { ArrowRight } from '@phosphor-icons/react';
 import { EQUIPMENT_TYPES, SEVERITY_LEVELS } from '@/lib/constants';
 import { ConfigCard } from './ConfigCard';
 import { Button } from '@/components/ui/button';
+import { saveJobConfig } from '@/app/actions';
 
 export function ConfigGrid() {
   const router = useRouter();
@@ -20,17 +21,7 @@ export function ConfigGrid() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/job-config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ equipmentType, severity }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.error || 'Failed to save configuration');
-      }
-
+      await saveJobConfig(equipmentType!, severity!);
       router.push('/prep');
     } catch (error) {
       console.error('Failed to save config:', error);
@@ -38,12 +29,8 @@ export function ConfigGrid() {
     }
   };
 
-  const selectedEquipment = EQUIPMENT_TYPES.find(
-    (eq) => eq.value === equipmentType,
-  );
-  const selectedSeverity = SEVERITY_LEVELS.find(
-    (sv) => sv.value === severity,
-  );
+  const selectedEquipment = EQUIPMENT_TYPES.find((eq) => eq.value === equipmentType);
+  const selectedSeverity = SEVERITY_LEVELS.find((sv) => sv.value === severity);
   const equipmentDescription = selectedEquipment
     ? getEquipmentDescription(selectedEquipment.value)
     : undefined;
@@ -58,9 +45,7 @@ export function ConfigGrid() {
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-slate-400">
           Equipment Type
         </h2>
-        <p className="mb-4 text-xs text-slate-500">
-          Select the equipment you are working on
-        </p>
+        <p className="mb-4 text-xs text-slate-500">Select the equipment you are working on</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {EQUIPMENT_TYPES.map((eq) => (
             <ConfigCard
@@ -68,9 +53,7 @@ export function ConfigGrid() {
               value={eq.value}
               label={eq.label}
               icon={eq.icon}
-              description={
-                equipmentType === eq.value ? equipmentDescription : undefined
-              }
+              description={equipmentType === eq.value ? equipmentDescription : undefined}
               selected={equipmentType === eq.value}
               onSelect={(val) => setEquipmentType(val)}
             />
@@ -83,9 +66,7 @@ export function ConfigGrid() {
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-slate-400">
           Severity Level
         </h2>
-        <p className="mb-4 text-xs text-slate-500">
-          Select the severity of the issue
-        </p>
+        <p className="mb-4 text-xs text-slate-500">Select the severity of the issue</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {SEVERITY_LEVELS.map((sv) => (
             <ConfigCard
@@ -93,9 +74,7 @@ export function ConfigGrid() {
               value={sv.value}
               label={sv.label}
               icon={sv.value === 'critical-fault' ? 'warning' : 'wrench'}
-              description={
-                severity === sv.value ? severityDescription : undefined
-              }
+              description={severity === sv.value ? severityDescription : undefined}
               selected={severity === sv.value}
               onSelect={(val) => setSeverity(val)}
             />

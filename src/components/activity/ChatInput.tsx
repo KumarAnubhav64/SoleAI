@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { PaperPlaneRight, Microphone, MicrophoneSlash } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { useSpeechToText } from '@/hooks/useSpeechToText';
@@ -76,9 +76,9 @@ export function ChatInput({
     }
   };
 
-  // STT is supported and hasn't errored: show real mic button
-  // STT not supported or errored: show the Simulate button as fallback
-  const showRealMic = sttSupported && !sttError;
+  // STT not supported or errored: show disabled Voice button with tooltip
+  const sttUnavailable = !sttSupported || !!sttError;
+  const sttTooltip = !sttSupported ? 'Voice input not supported on this browser' : sttError;
 
   return (
     <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
@@ -102,68 +102,45 @@ export function ChatInput({
         />
       </div>
 
-      {/* Speech-to-Text / Simulate button */}
-      <AnimatePresence mode="wait">
-        {showRealMic ? (
-          <motion.div
-            key="real-mic"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Button
-              type="button"
-              onClick={handleMicClick}
-              disabled={disabled || isTyping}
-              variant={isListening ? 'default' : 'secondary'}
-              size="sm"
-              className={`gap-1.5 rounded-xl px-3 text-xs font-medium shadow-sm backdrop-blur-sm transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30'
-                  : 'border border-slate-700/50 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200'
-              }`}
-              title={isListening ? 'Stop listening' : 'Start voice input'}
-            >
-              {isListening ? (
-                <>
-                  <span className="flex h-2.5 w-2.5">
-                    <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-red-400 opacity-75" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
-                  </span>
-                  <span className="hidden sm:inline">Stop</span>
-                </>
-              ) : (
-                <>
-                  <Microphone size={14} />
-                  <span className="hidden sm:inline">Voice</span>
-                </>
-              )}
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="simulate"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Button
-              type="button"
-              onClick={onSimulateSpeech}
-              disabled={disabled || isTyping}
-              variant="secondary"
-              size="sm"
-              className="gap-1.5 rounded-xl border border-slate-700/50 bg-slate-800/50 px-3 text-xs font-medium text-slate-400 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200"
-              title="Simulate speech-to-text (not available)"
-            >
-              <MicrophoneSlash size={14} />
-              <span className="hidden sm:inline">Simulate</span>
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Speech-to-Text button */}
+      <motion.div layout transition={{ duration: 0.15 }}>
+        <Button
+          type="button"
+          onClick={sttUnavailable ? onSimulateSpeech : handleMicClick}
+          disabled={sttUnavailable ? false : disabled || isTyping}
+          variant={isListening ? 'default' : sttUnavailable ? 'secondary' : 'secondary'}
+          size="sm"
+          title={
+            sttUnavailable
+              ? (sttTooltip ?? 'Voice input unavailable')
+              : isListening
+                ? 'Stop listening'
+                : 'Start voice input'
+          }
+          className={`gap-1.5 rounded-xl px-3 text-xs font-medium shadow-sm backdrop-blur-sm transition-all duration-200 ${
+            isListening
+              ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30'
+              : sttUnavailable
+                ? 'border border-slate-700/50 bg-slate-800/50 text-slate-500 cursor-help'
+                : 'border border-slate-700/50 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200'
+          }`}
+        >
+          {isListening ? (
+            <>
+              <span className="flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+              </span>
+              <span className="hidden sm:inline">Stop</span>
+            </>
+          ) : (
+            <>
+              <Microphone size={14} />
+              <span className="hidden sm:inline">{sttUnavailable ? 'Unavailable' : 'Voice'}</span>
+            </>
+          )}
+        </Button>
+      </motion.div>
 
       {/* Send button */}
       <Button

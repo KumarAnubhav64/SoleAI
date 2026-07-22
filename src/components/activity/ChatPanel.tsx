@@ -91,32 +91,45 @@ export function ChatPanel({
         {/* suppressHydrationWarning prevents mismatch from server/client
             branching in useTextToSpeech (typeof window check) */}
         <div suppressHydrationWarning>
-          {ttsSupported && (
-            <button
-              onClick={() => {
-                handleUserInteraction();
-                toggleMute();
-              }}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
-                isMuted
+          <button
+            onClick={() => {
+              handleUserInteraction();
+              toggleMute();
+            }}
+            disabled={!ttsSupported}
+            title={
+              ttsSupported
+                ? isMuted
+                  ? 'Unmute voice'
+                  : 'Mute voice'
+                : 'Text-to-speech not supported on this browser'
+            }
+            aria-label={
+              ttsSupported
+                ? isMuted
+                  ? 'Enable text-to-speech'
+                  : 'Disable text-to-speech'
+                : 'Text-to-speech unavailable'
+            }
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+              !ttsSupported
+                ? 'border-slate-800 text-slate-700 cursor-not-allowed'
+                : isMuted
                   ? 'border-slate-800 text-slate-600 hover:border-slate-700 hover:text-slate-400'
                   : isSpeaking
                     ? 'border-blue-500/30 bg-blue-500/10 text-blue-400'
                     : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
-              }`}
-              title={isMuted ? 'Unmute voice' : 'Mute voice'}
-              aria-label={isMuted ? 'Enable text-to-speech' : 'Disable text-to-speech'}
-            >
-              {isMuted ? (
-                <SpeakerSlash size={13} />
-              ) : (
-                <SpeakerHigh size={13} weight={isSpeaking ? 'fill' : 'regular'} />
-              )}
-              <span className="hidden sm:inline">
-                {isMuted ? 'Muted' : isSpeaking ? 'Speaking...' : 'Voice'}
-              </span>
-            </button>
-          )}
+            }`}
+          >
+            {isMuted || !ttsSupported ? (
+              <SpeakerSlash size={13} />
+            ) : (
+              <SpeakerHigh size={13} weight={isSpeaking ? 'fill' : 'regular'} />
+            )}
+            <span className="hidden sm:inline">
+              {!ttsSupported ? 'N/A' : isMuted ? 'Muted' : isSpeaking ? 'Speaking...' : 'Voice'}
+            </span>
+          </button>
         </div>
       </div>
 

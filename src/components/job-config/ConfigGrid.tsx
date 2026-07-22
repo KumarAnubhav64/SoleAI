@@ -7,6 +7,7 @@ import { EQUIPMENT_TYPES, SEVERITY_LEVELS } from '@/lib/constants';
 import { ConfigCard } from './ConfigCard';
 import { Button } from '@/components/ui/button';
 import { saveJobConfig } from '@/app/actions';
+import { clearState } from '@/lib/storage';
 
 export function ConfigGrid() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export function ConfigGrid() {
     setIsSubmitting(true);
 
     try {
+      // Clear any previous mission's persisted chat data
+      clearState();
       await saveJobConfig(equipmentType!, severity!);
       router.push('/prep');
     } catch (error) {

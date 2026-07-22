@@ -26,7 +26,8 @@ function createMockMediaRecorder() {
   };
 
   // Mock MediaRecorder constructor
-  (globalThis as any).MediaRecorder = vi.fn(function (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const RecorderCtor: any = vi.fn(function (
     stream: MediaStream,
     options?: MediaRecorderOptions,
   ) {
@@ -36,8 +37,11 @@ function createMockMediaRecorder() {
     }
     return mockRecorder;
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).MediaRecorder = RecorderCtor;
 
   // Mock static method
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).MediaRecorder.isTypeSupported = vi.fn(() => true);
 
   return mockRecorder;
@@ -50,6 +54,7 @@ function createMockStream(): MediaStream {
 describe('useMediaRecorder', () => {
   beforeEach(() => {
     // Clear any previous mock
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (globalThis as any).MediaRecorder;
   });
 
@@ -204,7 +209,7 @@ describe('useMediaRecorder', () => {
   describe('duration tracking', () => {
     it('should track recording duration', async () => {
       vi.useFakeTimers();
-      const mockRecorder = createMockMediaRecorder();
+      createMockMediaRecorder();
       const { result } = renderHook(() =>
         useMediaRecorder(createMockStream()),
       );

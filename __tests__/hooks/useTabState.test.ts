@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useTabState } from '@/hooks/useTabState';
-import type { TabId, TabRecord } from '@/lib/types';
+import type { TabRecord } from '@/lib/types';
 
 describe('useTabState', () => {
   it('should start with scoping active and others locked by default', () => {

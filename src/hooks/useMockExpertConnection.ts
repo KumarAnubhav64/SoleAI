@@ -56,7 +56,10 @@ export function useMockExpertConnection(
   // Guards against stale timer callbacks firing after a reset or re-schedule
   const processingRef = useRef<number | null>(null);
 
-  scriptRef.current = script;
+  // Sync script ref when the script changes (avoids stale closures in callbacks)
+  useEffect(() => {
+    scriptRef.current = script;
+  }, [script]);
 
   // Reset mounted flag on every effect run (handles React StrictMode
   // double-invocation in dev: the cleanup sets mountedRef and

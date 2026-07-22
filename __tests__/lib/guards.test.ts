@@ -6,7 +6,7 @@ import {
   canAccessPerformance,
   isTabUnlocked,
 } from '@/lib/guards';
-import type { JobConfig, Progress, TabId } from '@/lib/types';
+import type { JobConfig, Progress } from '@/lib/types';
 import { createDefaultProgress } from '@/lib/types';
 
 describe('guards', () => {

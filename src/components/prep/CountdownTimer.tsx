@@ -15,7 +15,7 @@ export function CountdownTimer({
   onExpire,
   autoStart = true,
 }: CountdownTimerProps) {
-  const { secondsRemaining, isExpired, reset } = useCountdown(
+  const { secondsRemaining, isExpired } = useCountdown(
     totalSeconds,
     onExpire,
     !autoStart,

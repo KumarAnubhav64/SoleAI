@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, ArrowClockwise } from '@phosphor-icons/react';
+import { ArrowRight } from '@phosphor-icons/react';
 import { CountdownTimer } from '@/components/prep/CountdownTimer';
 import { SafetyInstructions } from '@/components/prep/SafetyInstructions';
 import { PermissionRequest } from '@/components/prep/PermissionRequest';
@@ -17,7 +17,7 @@ interface PrepClientProps {
 
 export function PrepClient({ jobConfig }: PrepClientProps) {
   const router = useRouter();
-  const [permissionStatus, setPermissionStatus] = useState<
+  const [, setPermissionStatus] = useState<
     'pending' | 'granted' | 'denied' | 'unavailable'
   >('pending');
   const [isRedirecting, setIsRedirecting] = useState(false);

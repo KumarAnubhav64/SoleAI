@@ -24,15 +24,13 @@ const tabMeta: Record<TabId, { label: string; Icon: React.ElementType }> = {
 };
 
 export function TabHeader({ tabId, status, onClick }: TabHeaderProps) {
-  const { label, Icon } = tabMeta[tabId];
+  const { label } = tabMeta[tabId];
 
-  const statusIcon = {
+  const StatusIcon = {
     locked: Lock,
     active: PlayCircle,
     completed: CheckCircle,
   }[status];
-
-  const StatusIcon = statusIcon;
 
   return (
     <motion.button

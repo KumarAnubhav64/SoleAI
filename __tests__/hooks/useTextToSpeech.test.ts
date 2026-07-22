@@ -3,14 +3,14 @@ import { renderHook, act } from '@testing-library/react';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 // Track the last created utterance so the mock speak can fire its events
-let lastUtterance: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let lastUtterance: Record<string, any> | null = null;
 
 function createMockSpeechSynthesis() {
   // Mock SpeechSynthesisUtterance constructor
-  (globalThis as any).SpeechSynthesisUtterance = vi.fn(function (
-    this: any,
-    text: string,
-  ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const UtteranceCtor: any = vi.fn(function (this: any, text: string) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastUtterance = this;
     this.text = text;
     this.rate = 1.0;
@@ -20,6 +20,8 @@ function createMockSpeechSynthesis() {
     this.onend = null;
     this.onerror = null;
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).SpeechSynthesisUtterance = UtteranceCtor;
 
   const mockSynthesis = {
     speaking: false,
@@ -66,6 +68,7 @@ describe('useTextToSpeech', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (globalThis as any).SpeechSynthesisUtterance;
   });
 

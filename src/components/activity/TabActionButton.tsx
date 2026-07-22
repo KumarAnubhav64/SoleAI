@@ -15,7 +15,7 @@ interface TabActionButtonProps {
 }
 
 export function TabActionButton({
-  tabId,
+  tabId: _tabId, // eslint-disable-line @typescript-eslint/no-unused-vars
   isLastTab,
   isComplete = false,
   onComplete,

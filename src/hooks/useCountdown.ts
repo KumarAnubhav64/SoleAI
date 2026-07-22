@@ -33,12 +33,18 @@ export function useCountdown(
   const onExpireRef = useRef(onExpire);
   const totalRef = useRef(totalSeconds);
 
-  // Keep the callback ref current without triggering re-renders
-  onExpireRef.current = onExpire;
-  totalRef.current = totalSeconds;
+  // Sync refs when callback or duration changes (avoids stale closures)
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
+
+  useEffect(() => {
+    totalRef.current = totalSeconds;
+  }, [totalSeconds]);
 
   // Reset when totalSeconds changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSecondsRemaining(totalSeconds);
     setIsExpired(false);
     setIsRunning(!startPaused);

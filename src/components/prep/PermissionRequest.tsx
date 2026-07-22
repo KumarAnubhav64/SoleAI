@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useCameraPermission } from '@/hooks/useCameraPermission';
 import { Button } from '@/components/ui/button';
 import {
-  Camera,
-  Microphone,
   CheckCircle,
   XCircle,
   WarningCircle,
@@ -24,7 +22,7 @@ export function PermissionRequest({
 }: PermissionRequestProps) {
   const { status, stream, error, isLoading, requestPermission, retry } =
     useCameraPermission();
-  const [hasRequested, setHasRequested] = useState(false);
+  const [, setHasRequested] = useState(false);
 
   // Auto-request on mount
   useEffect(() => {

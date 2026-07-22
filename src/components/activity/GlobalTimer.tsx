@@ -10,7 +10,7 @@ interface GlobalTimerProps {
 }
 
 export function GlobalTimer({ onExpire }: GlobalTimerProps) {
-  const { secondsRemaining, isExpired } = useCountdown(
+  const { secondsRemaining } = useCountdown(
     GLOBAL_TIMER_SECONDS,
     onExpire,
   );

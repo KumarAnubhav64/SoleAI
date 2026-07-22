@@ -1,0 +1,50 @@
+[
+  {
+    "id": "qa-1",
+    "sender": "expert",
+    "text": "Thank you for submitting the repair documentation. I've reviewed the recording and have a few follow-up questions to complete the quality assurance check.",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-2",
+    "sender": "user",
+    "text": "Happy to answer any questions. What would you like to clarify?",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-3",
+    "sender": "expert",
+    "text": "During the repair, did you verify that the replacement part matches the specifications listed in the service manual? Specifically the voltage rating and model number.",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-4",
+    "sender": "user",
+    "text": "Yes, I cross-referenced the part number against the service manual before installation. The voltage rating and model number both match the specifications.",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-5",
+    "sender": "expert",
+    "text": "Perfect. One last question — after completing the repair, did you run the full diagnostic cycle to confirm the system is operating within normal parameters?",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-6",
+    "sender": "user",
+    "text": "Yes, I ran the full diagnostic suite. The system passed all tests and is now operating within normal parameters. No error codes are present.",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-7",
+    "sender": "expert",
+    "text": "Excellent work, technician. The QA check is complete. Your repair documentation has been logged and the job is ready to be marked as finished. Thank you for your thorough work.",
+    "timestamp": 0
+  },
+  {
+    "id": "qa-8",
+    "sender": "user",
+    "text": "Thank you for your guidance. Completing the job now.",
+    "timestamp": 0
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "hvac": {
+    "routine-maintenance": [
+      "Ensure the HVAC unit is powered OFF before opening any access panels.",
+      "Verify that all capacitors are fully discharged — use a multimeter to confirm zero voltage.",
+      "Wear insulated gloves and safety glasses when handling refrigerant lines.",
+      "Check for proper ventilation in the work area — refrigerants can displace oxygen.",
+      "Secure all panels and fasteners before restoring power to the unit."
+    ],
+    "critical-fault": [
+      "IMMEDIATELY disconnect all power sources to the HVAC unit at the breaker panel.",
+      "Do NOT approach the unit if you detect the smell of burning insulation or see visible arcing.",
+      "Use a lockout/tagout (LOTO) device on the main disconnect switch before proceeding.",
+      "Wear full PPE: arc-rated clothing, insulated gloves, safety glasses with side shields, and hard hat.",
+      "Test for residual voltage on ALL phases using a certified voltage tester before touching any components.",
+      "Have a fire extinguisher (Class C) readily accessible before beginning any work.",
+      "If the fault involves refrigerant: evacuate the area and verify the environment is safe before proceeding."
+    ]
+  },
+  "industrial-printer": {
+    "routine-maintenance": [
+      "Power down the printer completely and disconnect from mains power.",
+      "Allow the print head and fuser assembly to cool for at least 10 minutes before handling.",
+      "Wear anti-static wrist strap when handling circuit boards or electronic components.",
+      "Use only manufacturer-approved cleaning solvents and lint-free wipes for internal cleaning.",
+      "Dispose of waste toner and cleaning materials according to local environmental regulations."
+    ],
+    "critical-fault": [
+      "Emergency stop the printer immediately using the red E-Stop button (if accessible).",
+      "Disconnect the printer from mains power at the wall outlet or breaker panel.",
+      "Do NOT open any covers if you see smoke, excessive heat, or hear unusual arcing sounds.",
+      "Allow a minimum 15-minute cooldown period for the fuser assembly and internal electronics.",
+      "Wear full PPE: heat-resistant gloves, safety glasses, and anti-static footwear.",
+      "If a toner spill has occurred, use a HEPA-filtered vacuum — never use a standard vacuum or compressed air.",
+      "Document all error codes displayed on the control panel BEFORE resetting or powering off."
+    ]
+  },
+  "server-rack": {
+    "routine-maintenance": [
+      "Verify that the server rack is properly grounded before touching any components.",
+      "Wear an anti-static wrist strap connected to the rack's grounding point at all times.",
+      "Power down the specific server unit through the OS before disconnecting power cables.",
+      "Label all cables before disconnecting — take a photo of the current cable layout for reference.",
+      "Handle SAS/SATA drives by the edges only — never touch the connector pins or circuit boards."
+    ],
+    "critical-fault": [
+      "Do NOT approach the rack if you smell burning electronics or see smoke — evacuate the area immediately.",
+      "If safe to approach, power down the affected server unit using the OS or the power button (hold 10 seconds).",
+      "Switch the affected server's PDU outlet to OFF at the rack PDU — do NOT pull the plug under load.",
+      "Wait for all internal fans to stop spinning before opening the server chassis.",
+      "Wear full ESD protection: grounded anti-static wrist strap, ESD-safe shoes, and ESD-safe work surface.",
+      "Use a thermal camera or infrared thermometer to check for hot spots before touching components.",
+      "Document all LED indicator states on the front panel AND rear ports before removing any components."
+    ]
+  }
+}

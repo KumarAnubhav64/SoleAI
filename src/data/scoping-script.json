@@ -1,0 +1,50 @@
+[
+  {
+    "id": "scoping-1",
+    "sender": "expert",
+    "text": "Hello, I'm your Remote Expert. I see you've been assigned a field repair job. Let me start the scoping assessment. Can you confirm the equipment type and severity level you're working with?",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-2",
+    "sender": "user",
+    "text": "Confirmed. I'm working on the equipment as configured in the job details.",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-3",
+    "sender": "expert",
+    "text": "Thank you. Before we proceed, I need you to visually inspect the unit. Look for any visible damage, corrosion, or loose connections. Can you describe what you see?",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-4",
+    "sender": "user",
+    "text": "I've completed the visual inspection. The unit appears to be in good physical condition — no visible damage or corrosion detected.",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-5",
+    "sender": "expert",
+    "text": "Excellent. Now please check the diagnostic panel. Are there any active error codes or warning lights on the control board?",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-6",
+    "sender": "user",
+    "text": "Checking the diagnostic panel now. I can see three warning lights on the secondary controller board.",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-7",
+    "sender": "expert",
+    "text": "Warning lights on the secondary controller board — noted. Based on the initial assessment, this appears to be a firmware calibration issue. We'll proceed with the repair documentation. Please move to the repair tab when ready.",
+    "timestamp": 0
+  },
+  {
+    "id": "scoping-8",
+    "sender": "user",
+    "text": "Understood. Moving to the repair documentation phase.",
+    "timestamp": 0
+  }
+]

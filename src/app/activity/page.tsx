@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { DotsThree, CheckCircle, Robot } from '@phosphor-icons/react';
+import { DotsThree, Robot } from '@phosphor-icons/react';
 import { TabContainer } from '@/components/activity/TabContainer';
 import { ChatBubble } from '@/components/activity/ChatBubble';
 import { useCameraPermission } from '@/hooks/useCameraPermission';
@@ -20,7 +20,7 @@ export default function ActivityPage() {
 function ActivityPageInner() {
   const router = useRouter();
   const { stream, requestPermission } = useCameraPermission();
-  const { messages, isTyping, isComplete, title } = useChatContext();
+  const { accumulatedMessages: messages, isTyping, title } = useChatContext();
   const rightPanelScrollRef = useRef<HTMLDivElement>(null);
 
   // Request camera on mount
@@ -108,22 +108,6 @@ function ActivityPageInner() {
                     <span className="h-2 w-2 animate-bounce rounded-full bg-slate-500 [animation-delay:0ms]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-slate-500 [animation-delay:150ms]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-slate-500 [animation-delay:300ms]" />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Complete message */}
-              {isComplete && messages.length > 0 && (
-                <motion.div
-                  key="complete"
-                  initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className="flex justify-center pt-2"
-                >
-                  <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 px-5 py-2 shadow-sm">
-                    <CheckCircle size={14} weight="fill" className="text-emerald-400" />
-                    <p className="text-xs font-medium text-emerald-400">{title} complete</p>
                   </div>
                 </motion.div>
               )}

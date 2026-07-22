@@ -23,17 +23,16 @@ export default function ScopingTab({ onComplete, isSubmitting, isComplete }: Sco
     simulateSpeech,
   } = useMockExpertConnection(scopingScript as ChatMessage[], 'scoping');
 
-  const { syncChatState } = useChatContext();
+  const { syncScopingState } = useChatContext();
 
-  // Sync chat state to the right panel context
+  // Sync scoping chat state to the accumulated transcript
   useEffect(() => {
-    syncChatState({
+    syncScopingState({
       messages,
       isTyping,
       isComplete: chatComplete,
-      title: 'Scoping Assessment',
     });
-  }, [messages, isTyping, chatComplete, syncChatState]);
+  }, [messages, isTyping, chatComplete, syncScopingState]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

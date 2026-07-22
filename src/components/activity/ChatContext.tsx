@@ -1,65 +1,83 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { ChatMessage } from '@/lib/types';
 
+export type ActiveSection = 'scoping' | 'repair' | 'qa';
+
 interface ChatContextValue {
-  messages: ChatMessage[];
+  /** Accumulated messages from scoping + QA combined into one full transcript */
+  accumulatedMessages: ChatMessage[];
+  /** Whether the currently active conversation tab is showing a typing indicator */
   isTyping: boolean;
-  isComplete: boolean;
+  /** Current section label shown in the right panel header */
   title: string;
-  /** Called by tabs to sync their chat state up to the context */
-  syncChatState: (state: {
+  /** Sync scoping tab's chat state */
+  syncScopingState: (state: {
     messages: ChatMessage[];
     isTyping: boolean;
     isComplete: boolean;
-    title: string;
   }) => void;
+  /** Sync QA tab's chat state */
+  syncQAState: (state: { messages: ChatMessage[]; isTyping: boolean; isComplete: boolean }) => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [title, setTitle] = useState('Remote Expert');
+  const [scopingMessages, setScopingMessages] = useState<ChatMessage[]>([]);
+  const [scopingIsTyping, setScopingIsTyping] = useState(false);
 
-  // Use a ref+callback to avoid stale closures in the sync function
-  const stateRef = useRef({ messages, isTyping, isComplete, title });
-  useEffect(() => {
-    stateRef.current = { messages, isTyping, isComplete, title };
-  }, [messages, isTyping, isComplete, title]);
+  const [qaMessages, setQaMessages] = useState<ChatMessage[]>([]);
+  const [qaIsTyping, setQaIsTyping] = useState(false);
 
-  const syncChatState = useCallback(
-    (state: { messages: ChatMessage[]; isTyping: boolean; isComplete: boolean; title: string }) => {
-      const current = stateRef.current;
-      if (
-        current.messages === state.messages &&
-        current.isTyping === state.isTyping &&
-        current.isComplete === state.isComplete &&
-        current.title === state.title
-      ) {
-        return; // No change — bail out to avoid re-renders
-      }
-      setMessages(state.messages);
-      setIsTyping(state.isTyping);
-      setIsComplete(state.isComplete);
-      setTitle(state.title);
+  const [activeSection, setActiveSection] = useState<ActiveSection>('scoping');
+
+  // Accumulated transcript: scoping first, then QA
+  const accumulatedMessages = useMemo(
+    () => [...scopingMessages, ...qaMessages],
+    [scopingMessages, qaMessages],
+  );
+
+  // Typing indicator follows whichever section is currently active
+  const isTyping = activeSection === 'scoping' ? scopingIsTyping : qaIsTyping;
+
+  // Title reflects the active section
+  const title =
+    activeSection === 'scoping'
+      ? 'Scoping Assessment'
+      : activeSection === 'qa'
+        ? 'Quality Assurance'
+        : 'Remote Expert';
+
+  const syncScopingState = useCallback(
+    (state: { messages: ChatMessage[]; isTyping: boolean; isComplete: boolean }) => {
+      setScopingMessages(state.messages);
+      setScopingIsTyping(state.isTyping);
+      setActiveSection('scoping');
+    },
+    [],
+  );
+
+  const syncQAState = useCallback(
+    (state: { messages: ChatMessage[]; isTyping: boolean; isComplete: boolean }) => {
+      setQaMessages(state.messages);
+      setQaIsTyping(state.isTyping);
+      setActiveSection('qa');
     },
     [],
   );
 
   return (
-    <ChatContext.Provider value={{ messages, isTyping, isComplete, title, syncChatState }}>
+    <ChatContext.Provider
+      value={{
+        accumulatedMessages,
+        isTyping,
+        title,
+        syncScopingState,
+        syncQAState,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

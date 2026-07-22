@@ -23,17 +23,16 @@ export default function QATab({ onComplete, isSubmitting, isComplete }: QATabPro
     simulateSpeech,
   } = useMockExpertConnection(qaScript as ChatMessage[], 'qa');
 
-  const { syncChatState } = useChatContext();
+  const { syncQAState } = useChatContext();
 
-  // Sync chat state to the right panel context
+  // Sync QA chat state to the accumulated transcript
   useEffect(() => {
-    syncChatState({
+    syncQAState({
       messages,
       isTyping,
       isComplete: chatComplete,
-      title: 'Quality Assurance',
     });
-  }, [messages, isTyping, chatComplete, syncChatState]);
+  }, [messages, isTyping, chatComplete, syncQAState]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

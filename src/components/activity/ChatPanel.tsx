@@ -127,7 +127,7 @@ export function ChatPanel({
               <SpeakerHigh size={13} weight={isSpeaking ? 'fill' : 'regular'} />
             )}
             <span className="hidden sm:inline">
-              {!ttsSupported ? 'N/A' : isMuted ? 'Muted' : isSpeaking ? 'Speaking...' : 'Voice'}
+              {!ttsSupported ? 'N/A' : isMuted ? 'Muted' : isSpeaking ? 'Speaking...' : 'Speak'}
             </span>
           </button>
         </div>

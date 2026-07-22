@@ -107,7 +107,7 @@ export function ChatInput({
         <Button
           type="button"
           onClick={sttReady ? handleMicClick : onSimulateSpeech}
-          disabled={sttProbing || disabled || isTyping}
+          disabled={disabled || isTyping}
           variant={isListening ? 'default' : 'secondary'}
           size="sm"
           title={
@@ -139,7 +139,7 @@ export function ChatInput({
             <>
               <Microphone size={14} />
               <span className="hidden sm:inline">
-                {sttProbing ? '...' : sttUnavailable ? 'Unavailable' : 'Voice'}
+                {sttProbing ? 'Voice' : sttUnavailable ? 'Unavailable' : 'Voice'}
               </span>
             </>
           )}

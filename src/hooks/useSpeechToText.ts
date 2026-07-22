@@ -155,7 +155,7 @@ export function useSpeechToText(): UseSpeechToTextReturn {
         }
       };
 
-      const timeoutId = setTimeout(() => settle('unavailable'), 3000);
+      const timeoutId = setTimeout(() => settle('unavailable'), 1000);
 
       probe.start();
 

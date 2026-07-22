@@ -16,14 +16,13 @@ function mockGetUserMedia(options: {
     stream = {} as MediaStream,
   } = options;
 
-  return vi.spyOn(navigator.mediaDevices, 'getUserMedia').mockImplementation(
-    () =>
+  return vi
+    .spyOn(navigator.mediaDevices, 'getUserMedia')
+    .mockImplementation(() =>
       shouldResolve
         ? Promise.resolve(stream)
-        : Promise.reject(
-            Object.assign(new Error(errorMessage), { name: errorName }),
-          ),
-  );
+        : Promise.reject(Object.assign(new Error(errorMessage), { name: errorName })),
+    );
 }
 
 describe('useCameraPermission', () => {

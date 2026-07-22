@@ -50,13 +50,9 @@ export function ChatBubble({ message, index }: ChatBubbleProps) {
           <p className="whitespace-pre-wrap break-words">{message.text}</p>
         </div>
         <div className={`mt-1 flex items-center gap-2 px-1 ${isUser ? 'flex-row-reverse' : ''}`}>
-          <span className="text-[10px] font-medium tracking-wide text-slate-600">
-            {time}
-          </span>
+          <span className="text-[10px] font-medium tracking-wide text-slate-600">{time}</span>
           <span
-            className={`h-1 w-1 rounded-full ${
-              isUser ? 'bg-blue-500/30' : 'bg-slate-600/30'
-            }`}
+            className={`h-1 w-1 rounded-full ${isUser ? 'bg-blue-500/30' : 'bg-slate-600/30'}`}
           />
           <span className="text-[10px] text-slate-700">
             {isUser ? 'Technician' : 'Remote Expert'}

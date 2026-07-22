@@ -40,10 +40,7 @@ export function useCameraPermission(): UseCameraPermissionReturn {
 
   const requestPermission = useCallback(async () => {
     // Check if navigator.mediaDevices exists
-    if (
-      !navigator.mediaDevices ||
-      typeof navigator.mediaDevices.getUserMedia !== 'function'
-    ) {
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
       setStatus('unavailable');
       setError(
         'Camera and microphone are not available in this environment. Please use a supported browser.',
@@ -78,9 +75,7 @@ export function useCameraPermission(): UseCameraPermissionReturn {
           break;
         case 'NotFoundError':
           setStatus('unavailable');
-          setError(
-            'No camera or microphone detected. Please connect a device and try again.',
-          );
+          setError('No camera or microphone detected. Please connect a device and try again.');
           break;
         case 'NotReadableError':
           setStatus('unavailable');

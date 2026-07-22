@@ -30,9 +30,7 @@ export function RecordingControls({ stream }: RecordingControlsProps) {
   if (!isSupported) {
     return (
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-center">
-        <p className="text-xs text-amber-400">
-          Recording is not supported in this environment.
-        </p>
+        <p className="text-xs text-amber-400">Recording is not supported in this environment.</p>
       </div>
     );
   }
@@ -44,11 +42,7 @@ export function RecordingControls({ stream }: RecordingControlsProps) {
         {recordingState === 'stopped' && blob ? (
           <RecordingPreview key="preview" blob={blob} />
         ) : (
-          <CameraPreview
-            key="preview-live"
-            stream={stream}
-            className="aspect-video"
-          />
+          <CameraPreview key="preview-live" stream={stream} className="aspect-video" />
         )}
       </AnimatePresence>
 
@@ -82,18 +76,12 @@ export function RecordingControls({ stream }: RecordingControlsProps) {
             </motion.span>
           )}
 
-          {recordingState === 'error' && (
-            <span className="text-xs text-red-400">{error}</span>
-          )}
+          {recordingState === 'error' && <span className="text-xs text-red-400">{error}</span>}
         </div>
 
         <div className="flex gap-2">
           {recordingState === 'idle' && (
-            <Button
-              onClick={startRecording}
-              size="sm"
-              className="gap-1.5 text-xs"
-            >
+            <Button onClick={startRecording} size="sm" className="gap-1.5 text-xs">
               <Play size={14} weight="fill" />
               Record
             </Button>
@@ -112,24 +100,14 @@ export function RecordingControls({ stream }: RecordingControlsProps) {
           )}
 
           {recordingState === 'stopped' && (
-            <Button
-              onClick={reset}
-              size="sm"
-              variant="secondary"
-              className="gap-1.5 text-xs"
-            >
+            <Button onClick={reset} size="sm" variant="secondary" className="gap-1.5 text-xs">
               <Spinner size={14} />
               Re-record
             </Button>
           )}
 
           {recordingState === 'error' && (
-            <Button
-              onClick={reset}
-              size="sm"
-              variant="secondary"
-              className="gap-1.5 text-xs"
-            >
+            <Button onClick={reset} size="sm" variant="secondary" className="gap-1.5 text-xs">
               <Spinner size={14} />
               Try Again
             </Button>

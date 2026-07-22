@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCameraPermission } from '@/hooks/useCameraPermission';
 import { Button } from '@/components/ui/button';
-import {
-  CheckCircle,
-  XCircle,
-  WarningCircle,
-  ArrowClockwise,
-} from '@phosphor-icons/react';
+import { CheckCircle, XCircle, WarningCircle, ArrowClockwise } from '@phosphor-icons/react';
 
 interface PermissionRequestProps {
   onPermissionGranted?: () => void;
@@ -20,8 +15,7 @@ export function PermissionRequest({
   onPermissionGranted,
   onPermissionDenied,
 }: PermissionRequestProps) {
-  const { status, stream, error, isLoading, requestPermission, retry } =
-    useCameraPermission();
+  const { status, stream, error, isLoading, requestPermission, retry } = useCameraPermission();
   const [, setHasRequested] = useState(false);
 
   // Auto-request on mount
@@ -55,9 +49,7 @@ export function PermissionRequest({
         >
           <div className="flex items-center gap-3">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500/30 border-t-blue-500" />
-            <p className="text-sm text-slate-400">
-              Requesting camera and microphone access...
-            </p>
+            <p className="text-sm text-slate-400">Requesting camera and microphone access...</p>
           </div>
         </motion.div>
       )}
@@ -109,11 +101,10 @@ export function PermissionRequest({
           <div className="flex items-start gap-3">
             <XCircle size={20} className="mt-0.5 shrink-0 text-red-400" weight="fill" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-red-300">
-                Camera & microphone access denied
-              </p>
+              <p className="text-sm font-medium text-red-300">Camera & microphone access denied</p>
               <p className="mt-1 text-xs leading-relaxed text-red-400/70">
-                {error || 'Permission was denied. Please update your browser settings to allow camera and microphone access, then try again.'}
+                {error ||
+                  'Permission was denied. Please update your browser settings to allow camera and microphone access, then try again.'}
               </p>
               <p className="mt-2 text-xs text-red-400/50">
                 You can still proceed to the workspace, but video recording will not be available.

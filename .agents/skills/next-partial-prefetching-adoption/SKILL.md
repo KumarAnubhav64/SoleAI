@@ -61,7 +61,7 @@ Then, for each one:
 
    ```tsx
    // TODO(runtime-prefetch): assess with the user (prefetch = 'allow-runtime')
-   export const prefetch = 'partial'
+   export const prefetch = 'partial';
    ```
 
    Use that exact prefix so step 5 can grep them back. Don't cache or decide anything for these routes now.

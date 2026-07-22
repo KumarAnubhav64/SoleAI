@@ -10,10 +10,7 @@ interface GlobalTimerProps {
 }
 
 export function GlobalTimer({ onExpire }: GlobalTimerProps) {
-  const { secondsRemaining } = useCountdown(
-    GLOBAL_TIMER_SECONDS,
-    onExpire,
-  );
+  const { secondsRemaining } = useCountdown(GLOBAL_TIMER_SECONDS, onExpire);
 
   const minutes = Math.floor(secondsRemaining / 60);
   const seconds = secondsRemaining % 60;
@@ -36,19 +33,11 @@ export function GlobalTimer({ onExpire }: GlobalTimerProps) {
       `}
     >
       {isCritical ? (
-        <ClockCountdown
-          size={14}
-          weight="fill"
-          className="animate-pulse text-red-400"
-        />
+        <ClockCountdown size={14} weight="fill" className="animate-pulse text-red-400" />
       ) : (
         <Clock size={14} />
       )}
-      <span
-        className={`font-mono text-sm font-bold tabular-nums ${
-          isLow ? 'animate-pulse' : ''
-        }`}
-      >
+      <span className={`font-mono text-sm font-bold tabular-nums ${isLow ? 'animate-pulse' : ''}`}>
         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </span>
     </motion.div>

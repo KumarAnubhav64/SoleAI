@@ -47,8 +47,7 @@ interface TabContainerProps {
 }
 
 export function TabContainer({ stream, onAllComplete }: TabContainerProps) {
-  const { tabStatuses, activeTab, isComplete, completeTab, goToTab } =
-    useTabState();
+  const { tabStatuses, activeTab, isComplete, completeTab, goToTab } = useTabState();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {

@@ -9,9 +9,7 @@ interface TabState {
 }
 
 type TabAction =
-  | { type: 'COMPLETE_TAB'; tabId: TabId }
-  | { type: 'GO_TO_TAB'; tabId: TabId }
-  | { type: 'RESET' };
+  { type: 'COMPLETE_TAB'; tabId: TabId } | { type: 'GO_TO_TAB'; tabId: TabId } | { type: 'RESET' };
 
 function createDefaultTabRecord(): TabRecord {
   return {
@@ -39,9 +37,7 @@ function tabReducer(state: TabState, action: TabAction): TabState {
         newStatuses[nextTabId] = 'active';
       }
 
-      const allCompleted = TAB_ORDER.every(
-        (t) => newStatuses[t] === 'completed',
-      );
+      const allCompleted = TAB_ORDER.every((t) => newStatuses[t] === 'completed');
 
       return {
         tabStatuses: newStatuses,
@@ -101,10 +97,8 @@ interface UseTabStateReturn {
  * @param initialStatuses - Optional initial tab statuses (defaults to scoping active, rest locked)
  */
 export function useTabState(initialStatuses?: TabRecord): UseTabStateReturn {
-  const [state, dispatch] = useReducer(
-    tabReducer,
-    initialStatuses,
-    (statuses) => createInitialState(statuses),
+  const [state, dispatch] = useReducer(tabReducer, initialStatuses, (statuses) =>
+    createInitialState(statuses),
   );
 
   const completeTab = useCallback((tabId: TabId) => {

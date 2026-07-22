@@ -9,11 +9,7 @@ import { redirect } from 'next/navigation';
  * Phase 3 split-screen workspace. This is a secondary guard
  * after the middleware, providing defense-in-depth.
  */
-export default async function ActivityLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default async function ActivityLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
   const prepComplete = cookieStore.get('prepComplete')?.value;
 
@@ -25,9 +21,5 @@ export default async function ActivityLayout({
     redirect('/');
   }
 
-  return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      {children}
-    </div>
-  );
+  return <div className="flex flex-1 flex-col overflow-hidden">{children}</div>;
 }

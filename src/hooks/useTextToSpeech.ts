@@ -37,9 +37,7 @@ interface UseTextToSpeechReturn {
  *
  * @param options - Rate, pitch, and initial mute state
  */
-export function useTextToSpeech(
-  options: UseTextToSpeechOptions = {},
-): UseTextToSpeechReturn {
+export function useTextToSpeech(options: UseTextToSpeechOptions = {}): UseTextToSpeechReturn {
   const { rate = 1.0, pitch = 1.0, muted: initialMuted = false } = options;
 
   const [isSpeaking, setIsSpeaking] = useState(false);

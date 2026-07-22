@@ -32,6 +32,7 @@
 You are building a proof-of-concept for a **Remote Field Technician Support Portal**. When field technicians arrive at a complex repair site, they use this web application to configure their job details, review safety instructions, and interface with a "Remote Expert System" to diagnose, record, and verify the repair.
 
 We are looking for **clean, modular, and reusable code**. We care deeply about:
+
 - How you structure your Next.js application
 - Where you draw the line between Client and Server Components
 - How you handle state management across a multi-step workflow
@@ -67,6 +68,7 @@ The home page where the technician configures their job parameters.
 **UI Layout**: A clear, selectable grid or card system for job parameters.
 
 **Requirements:**
+
 - Display a small grid of configuration cards
 - User selects **Equipment Type**: HVAC, Industrial Printer, Server Rack
 - User selects **Severity Level**: Routine Maintenance, Critical Fault
@@ -81,6 +83,7 @@ A briefing screen where the technician reviews safety info and prepares for the 
 **UI Layout**: A prominent countdown timer and clean display of dynamic safety parameters.
 
 **Requirements:**
+
 - Display the parameters selected in Phase 1 (read from localStorage)
 - Display **mock safety instructions** based on selected parameters
 - **30-second countdown timer** starts automatically
@@ -98,15 +101,18 @@ A briefing screen where the technician reviews safety info and prepares for the 
 The core of the application. A split-screen dashboard with three sequential lockable tabs.
 
 **Global Layout:**
+
 - **Left Panel**: Technician input area (webcam/text)
 - **Right Panel**: Persistent "Remote Expert" AI interface (chat log)
 - **Top Navigation Bar**: Consistent across all routes (Phase 1-3)
 
 **Global 10-Minute Timer:**
+
 - Countdown timer of 600 seconds runs automatically
 - When timer reaches 0: gracefully wind up, save all data/progress, redirect to `/performance`
 
 **Tab System (Sequential & Lockable):**
+
 - Tabs must be completed in order (1 → 2 → 3)
 - Clicking **"Completed – Next"** locks the current tab and highlights/activates the next
 - **State machine**: `locked → active → completed`
@@ -116,6 +122,7 @@ The core of the application. A split-screen dashboard with three sequential lock
 **Purpose**: Simulate a real-time connection with a "Remote Expert" to scope the problem.
 
 **Requirements:**
+
 - Simulate a **mock WebSocket/WebRTC data channel**
 - The "Expert" (hardcoded JSON script) outputs an initial greeting
 - Expert asks a scoping question based on Phase 1 configuration
@@ -128,6 +135,7 @@ The core of the application. A split-screen dashboard with three sequential lock
 **Purpose**: The technician records themselves performing the fix.
 
 **Requirements:**
+
 - Integrate browser's **`MediaRecorder` API** to capture video/audio from webcam
 - **Start** / **Stop** controls
 - Once video is recorded and confirmed → **"Completed – Next"**
@@ -138,6 +146,7 @@ The core of the application. A split-screen dashboard with three sequential lock
 **Purpose**: Final follow-up chat with the "Remote Expert" after video submission.
 
 **Requirements:**
+
 - Mock real-time messaging interface (similar to Tab 1)
 - System asks **1-2 generic follow-up questions**
 - User replies (type or simulate speech)
@@ -156,6 +165,7 @@ A placeholder/dummy end screen. No need to design in detail — just a completio
 You must demonstrate a strong understanding of modern Next.js architecture. We will heavily evaluate your deliberate division of **Server Components vs. Client Components**.
 
 **Server Actions vs. Route Handlers:**
+
 - **Server Actions**: Use for UI-driven data mutations and state updates (e.g., saving job config, marking tabs complete)
 - **Route Handlers**: Use only where a real RESTful API boundary makes sense (e.g., handling external webhooks, serving recorded video blobs)
 
@@ -164,6 +174,7 @@ You must demonstrate a strong understanding of modern Next.js architecture. We w
 A user should **not** be able to jump directly to `/activity` (or to Tab 3) by typing the URL, without having completed the prior steps.
 
 **Implementation**: Multiple layers of protection:
+
 1. **Middleware** (`middleware.ts`) — checks cookie flags for route-level access
 2. **Layout-level guard** — `app/activity/layout.tsx` performs server-side check
 3. **Tab-level guard** — Client-side state machine prevents skipping tabs
@@ -171,6 +182,7 @@ A user should **not** be able to jump directly to `/activity` (or to Tab 3) by t
 ### 3.3 Browser-Only APIs Isolation
 
 `MediaRecorder`, mock WebSocket/WebRTC, and `window.speechSynthesis` only work in the browser. These must be:
+
 - Correctly isolated in **Client Components** (`'use client'`)
 - Lazy-loaded via **`next/dynamic` with `ssr: false`** where it helps avoid unnecessary server-side evaluation
 - Never imported in Server Components or Server Actions
@@ -178,6 +190,7 @@ A user should **not** be able to jump directly to `/activity` (or to Tab 3) by t
 ### 3.4 Error Handling
 
 Handle at least one real failure case gracefully:
+
 - **User denying webcam/microphone permissions** on the Prep Page
 - Use `error.tsx` or error boundary or inline recovery UI
 - **Don't let it hard-crash the page**
@@ -188,6 +201,7 @@ Handle at least one real failure case gracefully:
 While Next.js can act as a full-stack framework, you may choose to build a separate backend server (e.g., Node/Express, Python).
 
 **Rationale for separate backend (if chosen):**
+
 - Managing persistent WebSocket connections for real-time chat (Tabs 1 & 3)
 - Handling heavy, long-running tasks like processing and storing video blobs
 - Not tying up the Next.js server with these operations
@@ -199,6 +213,7 @@ While Next.js can act as a full-stack framework, you may choose to build a separ
 Store user's progress and inputs to mimic a database.
 
 **Strategy:**
+
 - **Cookies**: Boolean flags only (route-guard decisions in middleware)
 - **localStorage**: Full payload (JobConfig, chat history, recording metadata, timestamps)
 - **Save granularity**: On tab completion (milestone-based) — balances UI responsiveness with data integrity
@@ -237,6 +252,7 @@ https://github.com/orgs/community/discussions/190342
 ### 3.10 Bonus: Real AI Integration (Optional)
 
 Wire the "Remote Expert" system to a live LLM instead of hardcoded scripts:
+
 - Use **Vercel AI SDK** paired with a free API provider
 - Options: **Google AI Studio** (Gemini) or **Groq** — no credit card required
 - Dynamically handle scoping and Q&A tabs
@@ -245,35 +261,35 @@ Wire the "Remote Expert" system to a live LLM instead of hardcoded scripts:
 
 ## 4. What Is Being Evaluued
 
-| Area | What They're Looking For |
-|---|---|
-| **Paradigm Application** | Did you use Server Actions where they make sense, or unnecessarily rely on Route Handlers? Is your client bundle kept small by maximizing Server Components? |
-| **Modularity & Code Structure** | Are UI components (Cards, Timers, Chat bubbles, Video player) reusable and decoupled from business logic? Is the repository well-organized? |
-| **State Management** | How cleanly is state passed between Phase 1, 2, and 3? How do you manage active/locked states of tabs? |
-| **Robustness** | Does the app handle browser-only APIs, permission failures, and direct/out-of-order URL navigation gracefully? |
-| **System Design & Separation of Concerns** | If a separate backend was built, is the boundary between Next.js frontend and external service logical? |
-| **UX Polish** | Do loading states actively prevent the user from feeling lost or double-clicking buttons during simulated network delays? |
+| Area                                       | What They're Looking For                                                                                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Paradigm Application**                   | Did you use Server Actions where they make sense, or unnecessarily rely on Route Handlers? Is your client bundle kept small by maximizing Server Components? |
+| **Modularity & Code Structure**            | Are UI components (Cards, Timers, Chat bubbles, Video player) reusable and decoupled from business logic? Is the repository well-organized?                  |
+| **State Management**                       | How cleanly is state passed between Phase 1, 2, and 3? How do you manage active/locked states of tabs?                                                       |
+| **Robustness**                             | Does the app handle browser-only APIs, permission failures, and direct/out-of-order URL navigation gracefully?                                               |
+| **System Design & Separation of Concerns** | If a separate backend was built, is the boundary between Next.js frontend and external service logical?                                                      |
+| **UX Polish**                              | Do loading states actively prevent the user from feeling lost or double-clicking buttons during simulated network delays?                                    |
 
 ---
 
 ## 5. Tech Stack & Rationale
 
-| Concern | Choice | Rationale |
-|---|---|---|
-| **Framework** | Next.js 16.3+ (App Router), TypeScript (`strict: true`) | Required by assignment; 16.3+ for latest App Router features (Cache Components, Partial Prefetching) |
-| **UI Library** | Tailwind CSS v4 + shadcn/ui | Copy-in components, fast to build Cards/Tabs/Alerts, explainable in interview |
-| **Animation** | `motion/react` (formerly Framer Motion) | Default for UI transitions, Micro-interactions; never `useState` for continuous values — use `useMotionValue` |
-| **Icons** | `@phosphor-icons/react` | One icon family per project, standardized `strokeWidth`, no hand-rolled SVG paths |
-| **Fonts** | `Geist` + `Geist Mono` via `next/font` (NOT Inter) | Geist is the modern default; Inter is the stale AI default. Monospace for timers + technical data |
-| **State (cross-phase)** | Cookies (route-guard flags) + localStorage (payload) | Middleware can't read localStorage — cookie is source of truth for route access |
-| **Persistence** | `lib/storage.ts` — thin abstraction over localStorage | No real DB needed (assignment explicitly allows localStorage); abstraction keeps it swappable |
-| **Testing** | Vitest + React Testing Library + fake timers | Fast, native ESM, plays well with Next.js + TS |
-| **Video** | Native `MediaRecorder` API | No library needed |
-| **Mock realtime** | Custom `useMockExpertConnection` hook + JSON scripts | Simulates WebSocket/WebRTC with 1.5–3s artificial delay |
-| **TTS** | `window.speechSynthesis` (bonus) | Browser-native, completes the Voice-First illusion |
-| **Backend** | None separate (default) | Mock runs client-side; Route Handlers only where a real API boundary makes sense |
-| **CI** | GitHub Actions (lint, typecheck, test) | Minimal, high-signal "production grade" indicator |
-| **Git hooks** | Husky + lint-staged | Prevents bad commits, low effort |
+| Concern                 | Choice                                                  | Rationale                                                                                                     |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Framework**           | Next.js 16.3+ (App Router), TypeScript (`strict: true`) | Required by assignment; 16.3+ for latest App Router features (Cache Components, Partial Prefetching)          |
+| **UI Library**          | Tailwind CSS v4 + shadcn/ui                             | Copy-in components, fast to build Cards/Tabs/Alerts, explainable in interview                                 |
+| **Animation**           | `motion/react` (formerly Framer Motion)                 | Default for UI transitions, Micro-interactions; never `useState` for continuous values — use `useMotionValue` |
+| **Icons**               | `@phosphor-icons/react`                                 | One icon family per project, standardized `strokeWidth`, no hand-rolled SVG paths                             |
+| **Fonts**               | `Geist` + `Geist Mono` via `next/font` (NOT Inter)      | Geist is the modern default; Inter is the stale AI default. Monospace for timers + technical data             |
+| **State (cross-phase)** | Cookies (route-guard flags) + localStorage (payload)    | Middleware can't read localStorage — cookie is source of truth for route access                               |
+| **Persistence**         | `lib/storage.ts` — thin abstraction over localStorage   | No real DB needed (assignment explicitly allows localStorage); abstraction keeps it swappable                 |
+| **Testing**             | Vitest + React Testing Library + fake timers            | Fast, native ESM, plays well with Next.js + TS                                                                |
+| **Video**               | Native `MediaRecorder` API                              | No library needed                                                                                             |
+| **Mock realtime**       | Custom `useMockExpertConnection` hook + JSON scripts    | Simulates WebSocket/WebRTC with 1.5–3s artificial delay                                                       |
+| **TTS**                 | `window.speechSynthesis` (bonus)                        | Browser-native, completes the Voice-First illusion                                                            |
+| **Backend**             | None separate (default)                                 | Mock runs client-side; Route Handlers only where a real API boundary makes sense                              |
+| **CI**                  | GitHub Actions (lint, typecheck, test)                  | Minimal, high-signal "production grade" indicator                                                             |
+| **Git hooks**           | Husky + lint-staged                                     | Prevents bad commits, low effort                                                                              |
 
 ### Do We Need a Database?
 
@@ -343,6 +359,7 @@ Render page
 ### 6.4 Save Strategy
 
 **Milestone-based persistence** (not keystroke-by-keystroke):
+
 - **Phase 1 → 2**: Save on "Start Mission" click
 - **Phase 2 → 3**: Save when prep completes (timer expires or skip)
 - **Phase 3**: Save on each "Completed – Next" click per tab
@@ -352,6 +369,7 @@ Render page
 ### 6.5 Conversation Step Tracking
 
 The mock expert connection must track the current "step" in the conversation:
+
 - If user navigates away from the tab → conversation resumes at the **last unanswered expert message**
 - If the network drops (simulated) → system knows whether to repeat the last question or wait for user response
 - **Implementation**: `useMockExpertConnection` hook with internal step counter + localStorage sync
@@ -684,11 +702,13 @@ The camera feed in Tab 2 and microphone access should be **functional** (success
 For Tabs 1 and 3, simulate STT via:
 
 **Option A — "Simulate Speech" button** (preferred):
+
 - Automatically pulls the next `sender: "user"` string from the JSON script
 - Displays it in the chat as if it were just transcribed
 - Triggers the next expert step
 
 **Option B — Text input**:
+
 - User types the exact response from the JSON into an input box
 - Triggers the next expert step on submit
 
@@ -697,6 +717,7 @@ For Tabs 1 and 3, simulate STT via:
 ### 10.3 Simulating TTS (Text-to-Speech)
 
 When the mock WebSocket receives a message from `sender: "expert"`:
+
 1. Render it into the UI chat log
 2. **Bonus (encouraged)**: Use `window.speechSynthesis` API to literally speak the expert's text response out loud
 
@@ -705,7 +726,7 @@ When the mock WebSocket receives a message from `sender: "expert"`:
 function speakText(text: string) {
   if ('speechSynthesis' in window) {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;  // Normal speed
+    utterance.rate = 1.0; // Normal speed
     utterance.pitch = 1.0;
     window.speechSynthesis.speak(utterance);
   }
@@ -717,6 +738,7 @@ function speakText(text: string) {
 The application must keep track of the current "step" in the conversation.
 
 **Resume behavior**:
+
 - If user navigates away from the tab → the mock system should **not** repeat the last question
 - Instead, it should **wait for the user's response** at the current step
 - If the network drops (simulated) → same behavior: resume at current step
@@ -833,12 +855,12 @@ Build and test all pure logic before any UI:
 
 ## 12. Testing Strategy
 
-| Layer | Tool | What Gets Tested |
-|---|---|---|
-| **Unit (logic)** | Vitest | `guards.ts`, `storage.ts`, `useMockExpertConnection`, `useCountdown`, `useTabState` |
-| **Component** | React Testing Library (on Vitest) | Locked/unlocked tab rendering, permission-denied inline UI, chat rendering, Phase 1 form validation |
-| **Integration** (time-permitting) | RTL + mocked Server Actions | "Completing tab 1 unlocks tab 2" across the full page tree |
-| **E2E** (stretch) | Playwright | Full happy path: config → prep skip → all 3 tabs → performance screen |
+| Layer                             | Tool                              | What Gets Tested                                                                                    |
+| --------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Unit (logic)**                  | Vitest                            | `guards.ts`, `storage.ts`, `useMockExpertConnection`, `useCountdown`, `useTabState`                 |
+| **Component**                     | React Testing Library (on Vitest) | Locked/unlocked tab rendering, permission-denied inline UI, chat rendering, Phase 1 form validation |
+| **Integration** (time-permitting) | RTL + mocked Server Actions       | "Completing tab 1 unlocks tab 2" across the full page tree                                          |
+| **E2E** (stretch)                 | Playwright                        | Full happy path: config → prep skip → all 3 tabs → performance screen                               |
 
 ### Coverage Philosophy
 
@@ -871,6 +893,7 @@ No arbitrary % target. Aim for **100% of `lib/` and `hooks/` logic** tested. UI 
 > **Reading this as**: Multi-step field technician tool for industrial/technical users, with a functional dark-tech language, leaning toward Tailwind utilities + Geist + restrained motion.
 
 **Three Dials** (governing every layout, motion, and spacing decision):
+
 - `DESIGN_VARIANCE: 6` — Offset layouts (asymmetric panels, split-screen), not chaotic (this is a functional tool, not a portfolio)
 - `MOTION_INTENSITY: 4` — Fluid CSS transitions, entry animations, no scroll hijacks or physics. Motion must be motivated (feedback, state change, hierarchy)
 - `VISUAL_DENSITY: 6` — Tight data-dense workspace (cockpit feel for Phase 3), airy config screens for Phase 1-2
@@ -882,6 +905,7 @@ No arbitrary % target. Aim for **100% of `lib/` and `hooks/` logic** tested. UI 
 Industrial, technical, and functional — borrowing from operational dashboards, field-service tools, and mission-control interfaces. This is a **tool**, not a marketing page. Every design decision serves clarity and throughput.
 
 **Anti-defaults** (per `design-taste-frontend`):
+
 - ❌ No centered hero layouts (split-screen Phase 3 is correct)
 - ❌ No AI-purple/blue glow gradients (use blue-500 as clean accent, not neon)
 - ❌ No three-equal-card feature rows (Phase 1 cards have different content — this naturally avoids the trap)
@@ -931,16 +955,16 @@ Text-dim:      Slate-500 (#64748b)  — Disabled/placeholder text
 
 ### 13.4 Key Components Visual Style
 
-| Component | Style |
-|---|---|
-| **Config Cards** | `bg-slate-900 border border-slate-700 rounded-xl p-6` — Selected: `ring-2 ring-blue-500 border-blue-500` |
-| **Countdown Timer** | Large Geist Mono digits, `text-slate-100`. <10s: amber → red color shift with subtle pulse |
-| **Tab Headers** | Numbered steps with icon: 🔒 locked (slate), ▶ active (blue), ✓ completed (emerald). Horizontal stepper |
-| **Chat Bubbles** | Expert: left-aligned, `bg-slate-800 text-slate-100`. User: right-aligned, `bg-blue-600 text-white` |
-| **Recording Controls** | Red dot (🔴 pulsing during record), square (⏹ stop), play (▶ preview). Glass-button style |
-| **Global Timer** | Fixed bottom-right, compact pill `bg-slate-900/90 backdrop-blur`, red pulse when <60s |
-| **Navigation Bar** | Thin (`h-12`), `bg-slate-950 border-b border-slate-800`, shows current phase (1/2/3) |
-| **Safety Instructions** | Card with icon per instruction, `border-l-4 border-amber-500` for warnings |
+| Component               | Style                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Config Cards**        | `bg-slate-900 border border-slate-700 rounded-xl p-6` — Selected: `ring-2 ring-blue-500 border-blue-500` |
+| **Countdown Timer**     | Large Geist Mono digits, `text-slate-100`. <10s: amber → red color shift with subtle pulse               |
+| **Tab Headers**         | Numbered steps with icon: 🔒 locked (slate), ▶ active (blue), ✓ completed (emerald). Horizontal stepper  |
+| **Chat Bubbles**        | Expert: left-aligned, `bg-slate-800 text-slate-100`. User: right-aligned, `bg-blue-600 text-white`       |
+| **Recording Controls**  | Red dot (🔴 pulsing during record), square (⏹ stop), play (▶ preview). Glass-button style                |
+| **Global Timer**        | Fixed bottom-right, compact pill `bg-slate-900/90 backdrop-blur`, red pulse when <60s                    |
+| **Navigation Bar**      | Thin (`h-12`), `bg-slate-950 border-b border-slate-800`, shows current phase (1/2/3)                     |
+| **Safety Instructions** | Card with icon per instruction, `border-l-4 border-amber-500` for warnings                               |
 
 ### 13.5 Animations & Transitions
 
@@ -948,18 +972,19 @@ Text-dim:      Slate-500 (#64748b)  — Disabled/placeholder text
 
 **All motion must be motivated** — ask "what does this animation communicate?" before adding it:
 
-| Element | Animation | Motivation |
-|---|---|---|
-| **Config card hover** | `scale-[1.02]` + `ring-2 ring-blue-500/50` | Hierarchy — draws attention to selectable option |
-| **Config card select** | `ring-2 ring-blue-500` + subtle `border-blue-500` | Feedback — confirms the selection |
-| **Tab switch** | Fade + slide (duration 0.2s, ease `cubic-bezier(0.16, 1, 0.3, 1)`) | State transition — shows content changed |
-| **Chat message entry** | Fade-in + slide-up (0.3s, stagger 0.05s) | Storytelling — reveals conversation flow |
-| **Countdown tick** | Subtle scale pulse (1.0 → 1.05 → 1.0) on seconds <10 | Feedback — urgency signal |
-| **Recording** | Pulsing red dot (opacity 1 → 0.3 → 1, 1s cycle) | Feedback — confirms active recording |
-| **Permission denial** | Shake animation on retry button | Feedback — error state attention |
-| **Page transitions** | Route-level fade via `loading.tsx` skeletons | State transition — prevents confusion |
+| Element                | Animation                                                          | Motivation                                       |
+| ---------------------- | ------------------------------------------------------------------ | ------------------------------------------------ |
+| **Config card hover**  | `scale-[1.02]` + `ring-2 ring-blue-500/50`                         | Hierarchy — draws attention to selectable option |
+| **Config card select** | `ring-2 ring-blue-500` + subtle `border-blue-500`                  | Feedback — confirms the selection                |
+| **Tab switch**         | Fade + slide (duration 0.2s, ease `cubic-bezier(0.16, 1, 0.3, 1)`) | State transition — shows content changed         |
+| **Chat message entry** | Fade-in + slide-up (0.3s, stagger 0.05s)                           | Storytelling — reveals conversation flow         |
+| **Countdown tick**     | Subtle scale pulse (1.0 → 1.05 → 1.0) on seconds <10               | Feedback — urgency signal                        |
+| **Recording**          | Pulsing red dot (opacity 1 → 0.3 → 1, 1s cycle)                    | Feedback — confirms active recording             |
+| **Permission denial**  | Shake animation on retry button                                    | Feedback — error state attention                 |
+| **Page transitions**   | Route-level fade via `loading.tsx` skeletons                       | State transition — prevents confusion            |
 
 **Hard rules**:
+
 - Animate ONLY `transform` and `opacity`. Never `top`, `left`, `width`, `height`
 - Honor `prefers-reduced-motion` — use `useReducedMotion()` from `motion/react` to degrade to static
 - Never use `window.addEventListener('scroll', ...)` — use Motion's `useScroll()` or IntersectionObserver
@@ -1018,12 +1043,12 @@ Write / modify code
 
 For every significant change, verify these four failure modes:
 
-| # | Check | Tool/Method |
-|---|---|---|
-| 1 | **Compiles** | `npx tsc --noEmit` + dev server hot reload |
-| 2 | **Runs without errors** | Check browser console (F12) + dev server terminal for runtime errors |
-| 3 | **Behaves as intended** | Manual browser test: click through the flow, verify all states (loading, empty, error, success) |
-| 4 | **Edge cases** | URL-manipulation attempts (skip phases), permission denial, timer expiry, browser back/forward |
+| #   | Check                   | Tool/Method                                                                                     |
+| --- | ----------------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | **Compiles**            | `npx tsc --noEmit` + dev server hot reload                                                      |
+| 2   | **Runs without errors** | Check browser console (F12) + dev server terminal for runtime errors                            |
+| 3   | **Behaves as intended** | Manual browser test: click through the flow, verify all states (loading, empty, error, success) |
+| 4   | **Edge cases**          | URL-manipulation attempts (skip phases), permission denial, timer expiry, browser back/forward  |
 
 ### 14.4 Pre-Commit Gate
 
@@ -1054,6 +1079,7 @@ next build && next start
 ```
 
 Then manually test in the production build:
+
 - Route transitions work (no 404s from client-side navigation)
 - Loading states (Suspense boundaries) work as expected
 - Static shell renders first, dynamic content streams in
@@ -1106,12 +1132,11 @@ Then manually test in the production build:
 
 ### Key Decision Rationale Summary
 
-| Decision | Choice | Why |
-|---|---|---|
-| **Backend** | None separate | Mock WebSocket runs client-side; Route Handlers suffice for any API boundary |
-| **Persistence** | Cookies + localStorage | Cookies for middleware; localStorage for payload; abstraction keeps it swappable |
-| **Save granularity** | Milestone-based | Tab completion saves data; reduces writes vs. keystroke-level |
-| **Component boundary** | Server by default, Client only when needed | Browser-only APIs isolated; `next/dynamic` for heavy tabs |
-| **Mock expert** | Custom hook with state machine | Delayed emits, resume-on-remount, step tracking |
-| **State management** | React state + localStorage | Simpler than Redux for this scope; localStorage syncs across refreshes |
-
+| Decision               | Choice                                     | Why                                                                              |
+| ---------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| **Backend**            | None separate                              | Mock WebSocket runs client-side; Route Handlers suffice for any API boundary     |
+| **Persistence**        | Cookies + localStorage                     | Cookies for middleware; localStorage for payload; abstraction keeps it swappable |
+| **Save granularity**   | Milestone-based                            | Tab completion saves data; reduces writes vs. keystroke-level                    |
+| **Component boundary** | Server by default, Client only when needed | Browser-only APIs isolated; `next/dynamic` for heavy tabs                        |
+| **Mock expert**        | Custom hook with state machine             | Delayed emits, resume-on-remount, step tracking                                  |
+| **State management**   | React state + localStorage                 | Simpler than Redux for this scope; localStorage syncs across refreshes           |

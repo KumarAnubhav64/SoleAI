@@ -36,17 +36,10 @@ export function RecordingPreview({ blob }: RecordingPreviewProps) {
   return (
     <div className="space-y-2">
       <div className="relative overflow-hidden rounded-lg bg-black">
-        <video
-          ref={videoRef}
-          controls
-          playsInline
-          className="w-full"
-        />
+        <video ref={videoRef} controls playsInline className="w-full" />
       </div>
       <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>
-          Duration: {blob.size ? formatDuration(blob.size) : '0s'}
-        </span>
+        <span>Duration: {blob.size ? formatDuration(blob.size) : '0s'}</span>
         <span className="text-slate-600">{formatSize(blob.size)}</span>
       </div>
     </div>

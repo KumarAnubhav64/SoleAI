@@ -17,9 +17,9 @@ interface PrepClientProps {
 
 export function PrepClient({ jobConfig }: PrepClientProps) {
   const router = useRouter();
-  const [, setPermissionStatus] = useState<
-    'pending' | 'granted' | 'denied' | 'unavailable'
-  >('pending');
+  const [, setPermissionStatus] = useState<'pending' | 'granted' | 'denied' | 'unavailable'>(
+    'pending',
+  );
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const equipmentType = jobConfig.equipmentType as EquipmentType;
@@ -56,10 +56,7 @@ export function PrepClient({ jobConfig }: PrepClientProps) {
         <div className="space-y-6 lg:col-span-2">
           {/* Countdown */}
           <div className="flex flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-900 p-8">
-            <CountdownTimer
-              totalSeconds={PREP_COUNTDOWN_SECONDS}
-              onExpire={handleExpire}
-            />
+            <CountdownTimer totalSeconds={PREP_COUNTDOWN_SECONDS} onExpire={handleExpire} />
             <AnimatePresence>
               {!isRedirecting && (
                 <motion.div
@@ -68,12 +65,7 @@ export function PrepClient({ jobConfig }: PrepClientProps) {
                   exit={{ opacity: 0 }}
                   className="mt-6"
                 >
-                  <Button
-                    onClick={handleSkip}
-                    variant="secondary"
-                    size="sm"
-                    className="gap-1.5"
-                  >
+                  <Button onClick={handleSkip} variant="secondary" size="sm" className="gap-1.5">
                     Skip &amp; Proceed
                     <ArrowRight size={14} />
                   </Button>
@@ -115,18 +107,13 @@ export function PrepClient({ jobConfig }: PrepClientProps) {
                     : 'bg-emerald-500/10 text-emerald-400'
                 }`}
               >
-                {severity === 'critical-fault'
-                  ? 'Critical Fault'
-                  : 'Routine Maintenance'}
+                {severity === 'critical-fault' ? 'Critical Fault' : 'Routine Maintenance'}
               </div>
             </div>
           </div>
 
           {/* Safety */}
-          <SafetyInstructions
-            equipmentType={equipmentType}
-            severity={severity}
-          />
+          <SafetyInstructions equipmentType={equipmentType} severity={severity} />
         </div>
       </div>
     </main>

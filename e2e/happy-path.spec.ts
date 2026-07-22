@@ -23,9 +23,7 @@ test.describe('Full Happy Path', () => {
     // Navigate to home
     await page.goto('/');
     await expect(page).toHaveTitle(/SoleAI/);
-    await expect(
-      page.getByRole('heading', { name: /Job Configuration/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Job Configuration/i })).toBeVisible();
 
     // Verify NavigationBar shows Phase 1
     await expect(page.getByText(/Phase 1\/4/i)).toBeVisible();
@@ -52,16 +50,17 @@ test.describe('Full Happy Path', () => {
   /**
    * Step 2: Prep → Skip → Activity workspace
    */
-  test('Phase 2-3: Prep briefing → Activity workspace', async ({
-    page,
-    context,
-  }) => {
+  test('Phase 2-3: Prep briefing → Activity workspace', async ({ page, context }) => {
     // Set cookies to bypass route protection (start already at activity)
     const origin = 'http://localhost:3000';
     await context.addCookies([
       { name: 'configComplete', value: 'true', url: origin },
       { name: 'prepComplete', value: 'true', url: origin },
-      { name: 'jobConfig', value: '{"equipmentType":"hvac","severity":"critical-fault"}', url: origin },
+      {
+        name: 'jobConfig',
+        value: '{"equipmentType":"hvac","severity":"critical-fault"}',
+        url: origin,
+      },
     ]);
 
     await page.goto('/activity');
@@ -71,20 +70,14 @@ test.describe('Full Happy Path', () => {
     await expect(page.getByText(/Remote Expert — Connected/i)).toBeVisible();
 
     // Verify tab headers
-    await expect(
-      page.getByRole('button', { name: /Scoping tab/i }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole('button', { name: /Repair tab/i }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: /QA tab/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /Scoping tab/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole('button', { name: /Repair tab/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /QA tab/i })).toBeVisible();
 
     // Verify the chat panel renders with empty state
-    await expect(
-      page.getByText(/Connecting to Remote Expert/i),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Connecting to Remote Expert/i)).toBeVisible({ timeout: 10_000 });
 
     // Verify the TTS Voice toggle is present
     await expect(page.getByText(/Voice/i)).toBeVisible();
@@ -95,22 +88,18 @@ test.describe('Full Happy Path', () => {
     // ── Chat Interaction Test ──
     // First expert message should appear after mock delay (1.5-3s)
     // Use toBeAttached to handle Framer Motion's opacity animation
-    await expect(
-      page.getByText(/Hello, I'm your Remote Expert/i).first()
-    ).toBeAttached({ timeout: 30_000 });
+    await expect(page.getByText(/Hello, I'm your Remote Expert/i).first()).toBeAttached({
+      timeout: 30_000,
+    });
 
     // Simulate Speech button should become enabled when expert finishes typing
-    await expect(
-      page.getByTitle('Simulate speech-to-text')
-    ).toBeEnabled({ timeout: 10_000 });
+    await expect(page.getByTitle('Simulate speech-to-text')).toBeEnabled({ timeout: 10_000 });
 
     // Send one user response via Simulate Speech
     await page.getByTitle('Simulate speech-to-text').click();
 
     // Verify the next expert message arrives in the DOM
-    await expect(
-      page.getByText(/visually inspect the unit/i)
-    ).toBeAttached({ timeout: 20_000 });
+    await expect(page.getByText(/visually inspect the unit/i)).toBeAttached({ timeout: 20_000 });
 
     // Verify NavigationBar updated to Phase 3
     await expect(page.getByText(/Phase 3\/4/i)).toBeVisible();
@@ -119,10 +108,7 @@ test.describe('Full Happy Path', () => {
   /**
    * Step 3: Activity → Performance (bypass tabs via cookies)
    */
-  test('Activity → Performance completion screen', async ({
-    page,
-    context,
-  }) => {
+  test('Activity → Performance completion screen', async ({ page, context }) => {
     // Set all cookies to bypass route protection and simulate completion
     const origin = 'http://localhost:3000';
     await context.addCookies([
@@ -137,9 +123,7 @@ test.describe('Full Happy Path', () => {
     await page.waitForURL('**/performance', { timeout: 15_000 });
 
     // Verify the completion screen renders
-    await expect(
-      page.getByRole('heading', { name: /Mission Complete/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Mission Complete/i })).toBeVisible();
 
     // Verify job summary card
     await expect(page.getByText(/Job Summary/i)).toBeVisible();
@@ -162,9 +146,7 @@ test.describe('Full Happy Path', () => {
     // Without cookies, /prep redirects to /
     await page.goto('/prep');
     await page.waitForURL('**/', { timeout: 10_000 });
-    await expect(
-      page.getByRole('heading', { name: /Job Configuration/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Job Configuration/i })).toBeVisible();
 
     // Without cookies, /activity redirects to /
     await page.goto('/activity');

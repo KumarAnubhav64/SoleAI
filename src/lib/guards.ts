@@ -5,9 +5,7 @@ import { TAB_ORDER } from '@/lib/constants';
  * Check if the user can access the Prep page (Phase 2).
  * Requires a valid job config with both equipmentType and severity set.
  */
-export function canAccessPrep(
-  config: JobConfig | null | undefined,
-): boolean {
+export function canAccessPrep(config: JobConfig | null | undefined): boolean {
   if (!config) return false;
   return !!config.equipmentType && !!config.severity;
 }
@@ -16,9 +14,7 @@ export function canAccessPrep(
  * Check if the user can access the Activity page (Phase 3).
  * Requires that the prep briefing has been completed.
  */
-export function canAccessActivity(
-  progress: Progress | null | undefined,
-): boolean {
+export function canAccessActivity(progress: Progress | null | undefined): boolean {
   if (!progress) return false;
   return progress.prepComplete;
 }
@@ -27,9 +23,7 @@ export function canAccessActivity(
  * Check if the user can access the Performance page (completion screen).
  * Requires all three tabs to be completed.
  */
-export function canAccessPerformance(
-  progress: Progress | null | undefined,
-): boolean {
+export function canAccessPerformance(progress: Progress | null | undefined): boolean {
   if (!progress) return false;
   return (
     progress.tabStatuses.scoping === 'completed' &&
@@ -60,10 +54,7 @@ export function isTabUnlocked(tabId: TabId, progress: Progress): boolean {
  * Active tabs are accessible only if they are unlocked.
  * Locked tabs are not accessible.
  */
-export function canAccessTab(
-  tabId: TabId,
-  progress: Progress | null | undefined,
-): boolean {
+export function canAccessTab(tabId: TabId, progress: Progress | null | undefined): boolean {
   if (!progress) return false;
 
   const status = progress.tabStatuses[tabId];

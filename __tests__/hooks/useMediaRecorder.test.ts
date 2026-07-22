@@ -27,10 +27,7 @@ function createMockMediaRecorder() {
 
   // Mock MediaRecorder constructor
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const RecorderCtor: any = vi.fn(function (
-    stream: MediaStream,
-    options?: MediaRecorderOptions,
-  ) {
+  const RecorderCtor: any = vi.fn(function (stream: MediaStream, options?: MediaRecorderOptions) {
     mockRecorder.stream = stream;
     if (options?.mimeType) {
       mockRecorder.mimeType = options.mimeType;
@@ -64,9 +61,7 @@ describe('useMediaRecorder', () => {
 
   describe('initial state', () => {
     it('should start with idle state and no blob', () => {
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       expect(result.current.recordingState).toBe('idle');
       expect(result.current.blob).toBeNull();
@@ -85,9 +80,7 @@ describe('useMediaRecorder', () => {
   describe('startRecording', () => {
     it('should start recording and transition to recording state', () => {
       const mockRecorder = createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -111,9 +104,7 @@ describe('useMediaRecorder', () => {
 
     it('should do nothing if already recording', () => {
       const mockRecorder = createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -131,9 +122,7 @@ describe('useMediaRecorder', () => {
   describe('stopRecording', () => {
     it('should stop recording and produce a blob', () => {
       const mockRecorder = createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -159,9 +148,7 @@ describe('useMediaRecorder', () => {
     });
 
     it('should do nothing if not recording', () => {
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.stopRecording();
@@ -174,9 +161,7 @@ describe('useMediaRecorder', () => {
   describe('reset', () => {
     it('should reset to initial state', () => {
       const mockRecorder = createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -210,9 +195,7 @@ describe('useMediaRecorder', () => {
     it('should track recording duration', async () => {
       vi.useFakeTimers();
       createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -237,9 +220,7 @@ describe('useMediaRecorder', () => {
       const createSpy = vi.spyOn(globalThis, 'setInterval');
 
       const mockRecorder = createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -271,9 +252,7 @@ describe('useMediaRecorder', () => {
   describe('error handling', () => {
     it('should handle MediaRecorder errors', () => {
       const mockRecorder = createMockMediaRecorder();
-      const { result } = renderHook(() =>
-        useMediaRecorder(createMockStream()),
-      );
+      const { result } = renderHook(() => useMediaRecorder(createMockStream()));
 
       act(() => {
         result.current.startRecording();
@@ -283,9 +262,7 @@ describe('useMediaRecorder', () => {
         mockRecorder.onerror?.();
       });
 
-      expect(result.current.error).toBe(
-        'An error occurred during recording. Please try again.',
-      );
+      expect(result.current.error).toBe('An error occurred during recording. Please try again.');
       expect(result.current.recordingState).toBe('error');
     });
   });

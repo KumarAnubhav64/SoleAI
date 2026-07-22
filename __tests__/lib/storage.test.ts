@@ -8,14 +8,10 @@ import { createDefaultPersistedState } from '@/lib/types';
 const localStorageMock = (() => {
   const store: Record<string, string> = {};
   return {
-    getItem: vi.fn<(key: string) => string | null>(
-      (key: string) => store[key] ?? null,
-    ),
-    setItem: vi.fn<(key: string, value: string) => void>(
-      (key: string, value: string) => {
-        store[key] = value;
-      },
-    ),
+    getItem: vi.fn<(key: string) => string | null>((key: string) => store[key] ?? null),
+    setItem: vi.fn<(key: string, value: string) => void>((key: string, value: string) => {
+      store[key] = value;
+    }),
     removeItem: vi.fn<(key: string) => void>((key: string) => {
       delete store[key];
     }),
@@ -152,9 +148,7 @@ describe('storage', () => {
     it('should remove the persisted state from localStorage', () => {
       clearState();
 
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith(
-        STORAGE_KEY_PERSISTED_STATE,
-      );
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith(STORAGE_KEY_PERSISTED_STATE);
     });
 
     it('should not throw when clearing empty storage', () => {

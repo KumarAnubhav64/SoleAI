@@ -9,11 +9,7 @@ interface CameraPreviewProps {
   className?: string;
 }
 
-export function CameraPreview({
-  stream,
-  muted = true,
-  className = '',
-}: CameraPreviewProps) {
+export function CameraPreview({ stream, muted = true, className = '' }: CameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {

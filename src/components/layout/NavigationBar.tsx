@@ -17,17 +17,13 @@ export function NavigationBar() {
     if (p.href === '/') return pathname === '/';
     return pathname.startsWith(p.href);
   });
-  const activePhase =
-    currentPhaseIndex >= 0 ? currentPhaseIndex : 0;
+  const activePhase = currentPhaseIndex >= 0 ? currentPhaseIndex : 0;
 
   return (
     <header className="sticky top-0 z-50 h-12 border-b border-slate-800 bg-slate-950/90 backdrop-blur-sm">
       <nav className="mx-auto flex h-full max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm font-semibold text-slate-100"
-        >
+        <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-slate-100">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500 text-[11px] font-bold text-white">
             SA
           </span>
@@ -59,12 +55,7 @@ export function NavigationBar() {
                   }`}
                 >
                   {index < activePhase ? (
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 10 10"
-                      fill="none"
-                    >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                       <path
                         d="M2 5L4.5 7.5L8 2.5"
                         stroke="currentColor"

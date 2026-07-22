@@ -17,8 +17,8 @@ export default function PerformancePage() {
           Mission Complete
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          Thank you for your thorough work. The job has been logged and the
-          repair documentation has been submitted.
+          Thank you for your thorough work. The job has been logged and the repair documentation has
+          been submitted.
         </p>
 
         {/* Summary Card */}

@@ -15,9 +15,6 @@ export async function POST() {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to mark prep complete:', error);
-    return NextResponse.json(
-      { error: 'Failed to mark prep complete' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to mark prep complete' }, { status: 500 });
   }
 }

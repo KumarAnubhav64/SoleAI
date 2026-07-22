@@ -60,9 +60,7 @@ export function ConfigCard({
       </div>
       <div className="text-center">
         <p className="text-sm font-medium text-slate-100">{label}</p>
-        {description && (
-          <p className="mt-0.5 text-xs text-slate-500">{description}</p>
-        )}
+        {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
       </div>
       {selected && (
         <motion.div

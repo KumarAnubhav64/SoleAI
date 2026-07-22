@@ -18,10 +18,7 @@ export async function POST(request: Request) {
     const { tabId } = body;
 
     if (!tabId || !tabCookieMap[tabId]) {
-      return NextResponse.json(
-        { error: `Invalid tabId: ${tabId}` },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: `Invalid tabId: ${tabId}` }, { status: 400 });
     }
 
     const cookieName = tabCookieMap[tabId];
@@ -36,9 +33,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to complete tab:', error);
-    return NextResponse.json(
-      { error: 'Failed to complete tab' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to complete tab' }, { status: 500 });
   }
 }

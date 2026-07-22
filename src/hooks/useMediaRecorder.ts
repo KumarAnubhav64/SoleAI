@@ -25,9 +25,7 @@ interface UseMediaRecorderReturn {
  * - isSupported: false when MediaRecorder is unavailable or stream is null
  * - Handles ondataavailable, onstop, and onerror events
  */
-export function useMediaRecorder(
-  stream: MediaStream | null,
-): UseMediaRecorderReturn {
+export function useMediaRecorder(stream: MediaStream | null): UseMediaRecorderReturn {
   const [recordingState, setRecordingState] = useState<RecorderState>('idle');
   const [blob, setBlob] = useState<Blob | null>(null);
   const [durationMs, setDurationMs] = useState(0);
@@ -39,9 +37,7 @@ export function useMediaRecorder(
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isSupported =
-    typeof MediaRecorder !== 'undefined' &&
-    MediaRecorder !== null &&
-    stream !== null;
+    typeof MediaRecorder !== 'undefined' && MediaRecorder !== null && stream !== null;
 
   const clearDurationInterval = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -93,9 +89,7 @@ export function useMediaRecorder(
       };
 
       recorder.onerror = () => {
-        setError(
-          'An error occurred during recording. Please try again.',
-        );
+        setError('An error occurred during recording. Please try again.');
         setRecordingState('error');
         clearDurationInterval();
       };
@@ -105,18 +99,11 @@ export function useMediaRecorder(
       setRecordingState('recording');
       startDurationTracking();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(`Failed to start recording: ${message}`);
       setRecordingState('error');
     }
-  }, [
-    isSupported,
-    recordingState,
-    stream,
-    clearDurationInterval,
-    startDurationTracking,
-  ]);
+  }, [isSupported, recordingState, stream, clearDurationInterval, startDurationTracking]);
 
   const stopRecording = useCallback(() => {
     if (recordingState !== 'recording') return;
@@ -139,10 +126,7 @@ export function useMediaRecorder(
   useEffect(() => {
     return () => {
       clearDurationInterval();
-      if (
-        mediaRecorderRef.current &&
-        mediaRecorderRef.current.state === 'recording'
-      ) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
     };

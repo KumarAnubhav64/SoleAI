@@ -82,9 +82,7 @@ describe('useTextToSpeech', () => {
     });
 
     it('should start muted when initialMuted is true', () => {
-      const { result } = renderHook(() =>
-        useTextToSpeech({ muted: true }),
-      );
+      const { result } = renderHook(() => useTextToSpeech({ muted: true }));
 
       expect(result.current.isMuted).toBe(true);
     });
@@ -140,9 +138,7 @@ describe('useTextToSpeech', () => {
     });
 
     it('should not speak when muted', () => {
-      const { result } = renderHook(() =>
-        useTextToSpeech({ muted: true }),
-      );
+      const { result } = renderHook(() => useTextToSpeech({ muted: true }));
 
       act(() => {
         result.current.speak('Hello');
@@ -180,9 +176,7 @@ describe('useTextToSpeech', () => {
       });
 
       // Second speak should also call cancel (total increased)
-      expect(mockSpeechSynthesis.cancel.mock.calls.length).toBeGreaterThan(
-        cancelCountAfterFirst,
-      );
+      expect(mockSpeechSynthesis.cancel.mock.calls.length).toBeGreaterThan(cancelCountAfterFirst);
     });
 
     it('should do nothing when isSupported is false', () => {

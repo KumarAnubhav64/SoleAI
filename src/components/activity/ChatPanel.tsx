@@ -64,9 +64,7 @@ export function ChatPanel({
           <span className="flex h-2 w-2 rounded-full bg-emerald-500">
             <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-emerald-400 opacity-75" />
           </span>
-          <p className="text-xs font-semibold tracking-wide text-slate-300">
-            {title}
-          </p>
+          <p className="text-xs font-semibold tracking-wide text-slate-300">{title}</p>
         </div>
         {ttsSupported && (
           <button
@@ -109,12 +107,8 @@ export function ChatPanel({
                 <DotsThree size={20} className="text-slate-500" weight="bold" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-slate-400">
-                  Connecting to Remote Expert
-                </p>
-                <p className="mt-1 text-xs text-slate-600">
-                  Establishing secure connection...
-                </p>
+                <p className="text-sm font-medium text-slate-400">Connecting to Remote Expert</p>
+                <p className="mt-1 text-xs text-slate-600">Establishing secure connection...</p>
               </div>
             </motion.div>
           )}
@@ -154,9 +148,7 @@ export function ChatPanel({
             >
               <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 px-5 py-2 shadow-sm">
                 <CheckCircle size={14} weight="fill" />
-                <p className="text-xs font-medium text-emerald-400">
-                  Chat session complete
-                </p>
+                <p className="text-xs font-medium text-emerald-400">Chat session complete</p>
               </div>
             </motion.div>
           )}

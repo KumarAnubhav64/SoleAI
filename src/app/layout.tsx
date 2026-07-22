@@ -36,9 +36,7 @@ export default function RootLayout({
         <Suspense fallback={<NavigationBarLoading />}>
           <NavigationBar />
         </Suspense>
-        <main className="flex-1 flex flex-col">
-          {children}
-        </main>
+        <main className="flex-1 flex flex-col">{children}</main>
       </body>
     </html>
   );

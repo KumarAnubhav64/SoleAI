@@ -9,9 +9,7 @@ export default function ActivityError({
 }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8">
-      <h2 className="text-2xl font-semibold text-foreground">
-        Workspace Error
-      </h2>
+      <h2 className="text-2xl font-semibold text-foreground">Workspace Error</h2>
       <p className="text-muted-foreground text-sm max-w-md text-center">
         {error.message || 'The support workspace encountered an error.'}
       </p>

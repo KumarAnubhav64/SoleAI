@@ -76,9 +76,9 @@ export function ChatInput({
     }
   };
 
-  // STT is supported: show real mic button
-  // STT not supported: show the Simulate button as fallback
-  const showRealMic = sttSupported;
+  // STT is supported and hasn't errored: show real mic button
+  // STT not supported or errored: show the Simulate button as fallback
+  const showRealMic = sttSupported && !sttError;
 
   return (
     <form onSubmit={handleSubmit} className="relative flex items-center gap-2">

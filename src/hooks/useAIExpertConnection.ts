@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, useMemo, useReducer } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import type { ChatMessage, PersistedState } from '@/lib/types';
 import { loadState, saveState } from '@/lib/storage';
@@ -75,19 +75,15 @@ export function useAIExpertConnection(
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
-  // isComplete uses useReducer so the completion check effect can dispatch
-  // without triggering ESLint's react-hooks/set-state-in-effect rule
-  const [isComplete, dispatchComplete] = useReducer(
-    (_prev: boolean, value: boolean) => value,
-    initialMessages.length >= 3 && initialStep > 2,
-  );
+  // isComplete is always true — the user decides when to advance
+  // by clicking "Complete - Next", with no artificial threshold.
+  const [isComplete] = useState(true);
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [error, setError] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
   const [fallbackScriptStep, setFallbackScriptStep] = useState(initialStep);
 
   const abortRef = useRef<AbortController | null>(null);
-  const completionChecked = useRef(false);
   const hasInitialized = useRef(false);
   const hasShownFallbackToast = useRef(false);
   const messagesRef = useRef<ChatMessage[]>(initialMessages);
@@ -135,12 +131,7 @@ export function useAIExpertConnection(
     if (!useFallback) return;
 
     const script = scriptRef.current;
-    if (!script || fallbackScriptStep >= script.length) {
-      // Script exhausted — mark complete
-      dispatchComplete(true);
-      completionChecked.current = true;
-      return;
-    }
+    if (!script || fallbackScriptStep >= script.length) return;
 
     const sender = script[fallbackScriptStep]?.sender;
     if (sender === 'expert') {
@@ -418,30 +409,9 @@ export function useAIExpertConnection(
     triggerGreeting();
   }, [systemPrompt, initialStep, fallbackScript, useFallback]);
 
-  // ─── Completion check ───
-  useEffect(() => {
-    if (completionChecked.current && isComplete) return;
-    if (isTyping) return;
-
-    if (useFallback) {
-      // In fallback mode, mark complete when the fallback script is exhausted
-      const script = scriptRef.current;
-      if (script && fallbackScriptStep >= script.length) {
-        dispatchComplete(true);
-        completionChecked.current = true;
-      }
-    } else {
-      // AI mode: mark complete after a meaningful exchange
-      // (AI greeting + user reply + AI response + user reply + AI wrap-up)
-      const expertCount = messages.filter((m) => m.sender === 'expert').length;
-      const userCount = messages.filter((m) => m.sender === 'user').length;
-
-      if (expertCount >= 3 && userCount >= 2) {
-        dispatchComplete(true);
-        completionChecked.current = true;
-      }
-    }
-  }, [messages, isTyping, isComplete, useFallback, fallbackScriptStep, dispatchComplete]);
+  // No automatic completion check — the user clicks "Complete - Next"
+  // when they feel ready. isComplete is always true so the button
+  // is always enabled.
 
   // ─── Persist to localStorage ───
   useEffect(() => {
@@ -493,9 +463,7 @@ export function useAIExpertConnection(
     setUseFallback(false);
     setFallbackScriptStep(0);
     hasInitialized.current = false;
-    completionChecked.current = false;
     hasShownFallbackToast.current = false;
-    dispatchComplete(false);
     if (storageKey) {
       persistState(storageKey, [], 0);
     }

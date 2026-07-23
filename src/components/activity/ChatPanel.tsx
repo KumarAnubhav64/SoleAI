@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DotsThree, SpeakerHigh, SpeakerSlash, CheckCircle } from '@phosphor-icons/react';
+import { DotsThree, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useHydratedValue } from '@/hooks/useHydratedValue';
 import type { ChatMessage } from '@/lib/types';
@@ -23,7 +23,6 @@ interface ChatPanelProps {
 export function ChatPanel({
   messages,
   isTyping,
-  isComplete,
   onSend,
   onSimulateSpeech,
   disabled = false,
@@ -40,6 +39,9 @@ export function ChatPanel({
     isMuted,
     toggleMute,
   } = useTextToSpeech({ rate: 0.9, pitch: 1.0 });
+
+  // isComplete prop is accepted via ChatPanelProps but not destructured —
+  // the user clicks "Complete - Next" at will, no badge needed.
 
   // Hydration-safe TTS support: render as 'available' on server & first client paint,
   // then correct to the real browser capability after hydration.
@@ -206,22 +208,6 @@ export function ChatPanel({
               </div>
             </motion.div>
           )}
-
-          {/* Complete message */}
-          {isComplete && (
-            <motion.div
-              key="complete"
-              initial={{ opacity: 0, y: 12, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="flex justify-center pt-2"
-            >
-              <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 px-5 py-2 shadow-sm">
-                <CheckCircle size={14} weight="fill" />
-                <p className="text-xs font-medium text-emerald-400">Chat session complete</p>
-              </div>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
 
@@ -230,7 +216,7 @@ export function ChatPanel({
         <ChatInput
           onSend={onSend}
           onSimulateSpeech={onSimulateSpeech}
-          disabled={disabled || isComplete}
+          disabled={disabled}
           isTyping={isTyping}
         />
       </div>

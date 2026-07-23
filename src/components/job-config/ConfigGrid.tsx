@@ -7,7 +7,8 @@ import { EQUIPMENT_TYPES, SEVERITY_LEVELS } from '@/lib/constants';
 import { ConfigCard } from './ConfigCard';
 import { Button } from '@/components/ui/button';
 import { saveJobConfig } from '@/app/actions';
-import { clearState } from '@/lib/storage';
+import { clearState, saveState } from '@/lib/storage';
+import { createDefaultPersistedState } from '@/lib/types';
 
 export function ConfigGrid() {
   const router = useRouter();
@@ -25,6 +26,13 @@ export function ConfigGrid() {
       // Clear any previous mission's persisted chat data
       clearState();
       await saveJobConfig(equipmentType!, severity!);
+      // Save job config to localStorage so subsequent pages can read it
+      const state = createDefaultPersistedState();
+      state.jobConfig = {
+        equipmentType: equipmentType as 'hvac' | 'industrial-printer' | 'server-rack',
+        severity: severity as 'routine-maintenance' | 'critical-fault',
+      };
+      saveState(state);
       router.push('/prep');
     } catch (error) {
       console.error('Failed to save config:', error);

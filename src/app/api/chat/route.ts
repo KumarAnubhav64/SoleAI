@@ -1,9 +1,26 @@
 import { streamText } from 'ai';
-import { google } from '@ai-sdk/google';
+import { groq } from '@ai-sdk/groq';
 
 export const maxDuration = 30;
 
 const VALID_ROLES = new Set(['user', 'assistant']);
+
+/**
+ * Detect if stream text is actually an AI provider error
+ * (Gemini JSON error, Vercel SDK error) rather than legitimate content.
+ */
+function isAIErrorContent(text: string): boolean {
+  if (!text || text.length === 0) return false;
+  return (
+    text.includes('Error [AI_') ||
+    text.includes('AI_RetryError') ||
+    text.includes('AI_APICallError') ||
+    text.includes('InvalidPromptError') ||
+    text.includes('TypeValidationError') ||
+    text.includes('RESOURCE_EXHAUSTED') ||
+    (text.includes('"error":') && (text.includes('"code"') || text.includes('"message"')))
+  );
+}
 
 /**
  * Validate and sanitize messages before passing to Gemini.
@@ -35,6 +52,16 @@ function sanitizeMessages(
   return { sanitized };
 }
 
+/**
+ * Build an error Response for the hook to detect as a fallback trigger.
+ */
+function errorResponse(status: number, displayMessage: string): Response {
+  return new Response(JSON.stringify({ error: 'ai_error', message: displayMessage }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -60,13 +87,80 @@ export async function POST(req: Request) {
         : sanitizedResult.sanitized;
 
     const result = await streamText({
-      model: google('gemini-2.5-flash'),
+      model: groq('llama-3.3-70b-versatile'),
       messages: safeMessages,
       system: systemPrompt,
       temperature: 0.7,
     });
 
-    return result.toTextStreamResponse();
+    // The Vercel AI SDK's Google provider sometimes swallows Gemini 429 errors
+    // and returns an empty/error stream as HTTP 200. To catch this, we read the
+    // first chunk of the stream and check for error content before passing it through.
+    // If the first chunk looks like an error, we return a proper error response so
+    // the client-side hook can trigger its fallback logic.
+    const textStream = result.textStream;
+    const iterator = textStream[Symbol.asyncIterator]();
+    const firstResult = await iterator.next();
+
+    // Stream ended immediately with no content — likely an error
+    if (firstResult.done) {
+      console.warn('AI stream ended immediately with no content (likely provider error)');
+      return errorResponse(
+        503,
+        'AI service returned empty response. The app will use fallback responses.',
+      );
+    }
+
+    const firstChunk = firstResult.value;
+
+    // Check if the first chunk contains error content
+    if (isAIErrorContent(firstChunk)) {
+      console.warn('AI stream returned error content, returning 503:', firstChunk.slice(0, 100));
+
+      // Determine if it's rate limiting vs other errors
+      const isRateLimit =
+        firstChunk.includes('429') ||
+        firstChunk.includes('quota') ||
+        firstChunk.includes('rate limit') ||
+        firstChunk.includes('RESOURCE_EXHAUSTED');
+
+      return errorResponse(
+        isRateLimit ? 429 : 503,
+        isRateLimit
+          ? 'AI is temporarily rate-limited. The app will use fallback responses.'
+          : 'AI service encountered an error. The app will use fallback responses.',
+      );
+    }
+
+    // Stream is valid — create a new stream that includes the first chunk + the rest
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          controller.enqueue(encoder.encode(firstChunk));
+
+          // Stream the remaining chunks
+          while (true) {
+            const next = await iterator.next();
+            if (next.done) break;
+            controller.enqueue(encoder.encode(next.value));
+          }
+
+          controller.close();
+        } catch (streamErr) {
+          console.error('Stream error after first chunk:', streamErr);
+          controller.error(streamErr);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
   } catch (error) {
     console.error('Chat API error:', error);
 

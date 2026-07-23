@@ -15,7 +15,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/google": "^4.0.22",
+    "@ai-sdk/groq": "^4.0.13",
     "@ai-sdk/react": "^4.0.38",
     "@base-ui/react": "^1.6.0",
     "@phosphor-icons/react": "^2.0.0",

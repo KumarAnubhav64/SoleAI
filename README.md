@@ -6,7 +6,7 @@ A Next.js proof-of-concept where field technicians configure a job, complete a p
 
 ```bash
 npm install
-echo 'GOOGLE_GENERATIVE_AI_API_KEY=your_key_here' > .env.local  # Get free key: https://aistudio.google.com/apikey
+echo 'GROQ_API_KEY=your_key_here' > .env.local  # Get free key: https://console.groq.com/keys
 npm run dev
 open http://localhost:3000
 ```
@@ -20,6 +20,8 @@ Then navigate through the 4-phase flow:
 
 > **No API key?** The app falls back to scripted responses — the full flow works without it.
 
+> **Note**: Previously used Google Gemini. If you have an existing `.env.local` with `GOOGLE_GENERATIVE_AI_API_KEY`, replace it with `GROQ_API_KEY` (get one at https://console.groq.com/keys).
+
 ## Architecture
 
 ### Tech Stack
@@ -27,8 +29,7 @@ Then navigate through the 4-phase flow:
 | Concern         | Choice                                          |
 | --------------- | ----------------------------------------------- |
 | **Framework**   | Next.js 16.3+ (App Router), TypeScript strict   |
-| **UI**          | Tailwind CSS v4 + shadcn/ui + motion/react      |
-| **AI**          | Google Gemini 2.5 Flash via Vercel AI SDK v7    |
+| **UI**          | Tailwind CSS v4 + shadcn/ui + motion/react      |     | **AI** | Groq (Llama 3.3 70B) via Vercel AI SDK v7 |
 | **Persistence** | Cookies (route guards) + localStorage (payload) |
 | **Testing**     | Vitest + React Testing Library + Playwright     |
 | **CI**          | GitHub Actions (lint, typecheck, test, build)   |
@@ -104,9 +105,8 @@ src/
 
 ## Environment Variables
 
-| Variable                       | Required | Description                       |
-| ------------------------------ | -------- | --------------------------------- |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Optional | Gemini key (app works without it) |
+| Variable | Required | Description |
+| ------------------------------ | -------- | --------------------------------- || `GROQ_API_KEY` | Optional | Groq API key (get free at https://console.groq.com/keys)|
 
 ## Testing
 

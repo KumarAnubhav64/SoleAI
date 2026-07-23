@@ -22,6 +22,31 @@ interface UseAIExpertConnectionReturn {
 type AIChatRole = 'user' | 'assistant';
 type AIChatMessage = { id: string; role: AIChatRole; content: string };
 
+/**
+ * Detect if streamed content is actually an error from the AI provider
+ * (Gemini JSON error, Vercel AI SDK error, etc.) rather than a legitimate response.
+ */
+function isErrorContent(text: string): boolean {
+  return (
+    // Vercel AI SDK error formats (may appear at start or mid-stream)
+    text.startsWith('Error [AI_') ||
+    text.includes('Error [AI_') ||
+    text.startsWith('AI_InvalidPromptError') ||
+    text.startsWith('AI_TypeValidationError') ||
+    text.includes('InvalidPromptError') ||
+    text.includes('TypeValidationError') ||
+    text.includes('AI_RetryError') ||
+    text.includes('AI_APICallError') ||
+    // Gemini API JSON error format (e.g., 429 quota exceeded)
+    text.includes('RESOURCE_EXHAUSTED') ||
+    (text.includes('"error":') && (text.includes('"code"') || text.includes('"message"')))
+  );
+}
+
+/** User-friendly message shown in chat when the AI is unavailable. */
+const FALLBACK_NOTICE_MESSAGE =
+  '⚠️ The Remote Expert AI is currently unavailable. Switching to pre-configured responses to continue the session.';
+
 function getRandomDelay(): number {
   return (
     Math.floor(Math.random() * (MOCK_EXPERT_DELAY_MAX - MOCK_EXPERT_DELAY_MIN + 1)) +
@@ -246,14 +271,9 @@ export function useAIExpertConnection(
         setCurrentStep((prev) => prev + 1);
 
         // Detect if the streamed content is actually an error message
-        // (happens when streamText throws after the response already started streaming).
-        // Use precise patterns to avoid false positives on legitimate AI responses.
-        const looksLikeError =
-          aiContent.startsWith('Error [AI_') ||
-          aiContent.startsWith('AI_InvalidPromptError') ||
-          aiContent.startsWith('AI_TypeValidationError') ||
-          aiContent.includes('InvalidPromptError') ||
-          aiContent.includes('TypeValidationError');
+        // (happens when streamText throws after the response already started streaming,
+        // or when Gemini returns a JSON error inside the SSE stream).
+        const looksLikeError = isErrorContent(aiContent);
 
         if (looksLikeError && fallbackScript) {
           console.warn(
@@ -262,15 +282,25 @@ export function useAIExpertConnection(
           );
           if (!hasShownFallbackToast.current) {
             hasShownFallbackToast.current = true;
-            toast.warning('AI returned an error. Using pre-configured responses as fallback.', {
+            toast.warning('AI encountered an issue. Using pre-configured responses as fallback.', {
               duration: 5000,
             });
           }
-          // Remove the error message from chat and switch to fallback
+          // Remove the error message from chat
           const msgId = expertMsgId;
           if (msgId) {
             setMessages((prev) => prev.filter((m) => m.id !== msgId));
           }
+          // Show a user-friendly notice so the user knows fallback activated
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `fallback-notice-${Date.now()}`,
+              sender: 'expert',
+              text: FALLBACK_NOTICE_MESSAGE,
+              timestamp: Date.now(),
+            },
+          ]);
           setUseFallback(true);
           // Skip past the first script greeting if AI already sent one
           const hasExistingExpert = messagesRef.current.some((m) => m.sender === 'expert');
@@ -295,6 +325,16 @@ export function useAIExpertConnection(
               { duration: 5000 },
             );
           }
+          // Show a user-friendly notice in chat
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `fallback-notice-${Date.now()}`,
+              sender: 'expert',
+              text: FALLBACK_NOTICE_MESSAGE,
+              timestamp: Date.now(),
+            },
+          ]);
           // Advance past the first script greeting if AI already sent one
           const hasExistingExpert = messagesRef.current.some((m) => m.sender === 'expert');
           if (hasExistingExpert && fallbackScript[0]?.sender === 'expert') {
@@ -381,6 +421,15 @@ export function useAIExpertConnection(
         }
 
         setCurrentStep(1);
+
+        // Also check greeting stream for error content
+        if (aiContent.length > 0 && isErrorContent(aiContent)) {
+          console.warn(
+            'AI greeting stream returned error content, switching to fallback:',
+            aiContent.slice(0, 100),
+          );
+          throw new Error('Greeting stream contained error');
+        }
       } catch (err) {
         console.error('Failed to get AI greeting:', err);
 
@@ -394,12 +443,29 @@ export function useAIExpertConnection(
             );
           }
           setUseFallback(true);
-          // Emit the first expert message from the script
+          // Show user-friendly notice + first script greeting
           const firstExpertMsg = fallbackScript.find((m) => m.sender === 'expert');
           if (firstExpertMsg) {
-            setMessages([{ ...firstExpertMsg, timestamp: Date.now() }]);
+            setMessages([
+              {
+                id: `fallback-notice-${Date.now()}`,
+                sender: 'expert',
+                text: FALLBACK_NOTICE_MESSAGE,
+                timestamp: Date.now(),
+              },
+              { ...firstExpertMsg, timestamp: Date.now() },
+            ]);
             const firstExpertIdx = fallbackScript.indexOf(firstExpertMsg);
             setFallbackScriptStep(firstExpertIdx + 1);
+          } else {
+            setMessages([
+              {
+                id: `fallback-notice-${Date.now()}`,
+                sender: 'expert',
+                text: FALLBACK_NOTICE_MESSAGE,
+                timestamp: Date.now(),
+              },
+            ]);
           }
         } else {
           // No fallback available — show a generic greeting

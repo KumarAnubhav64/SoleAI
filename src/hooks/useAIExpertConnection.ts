@@ -198,6 +198,7 @@ export function useAIExpertConnection(
 
         const decoder = new TextDecoder();
         let aiContent = '';
+        let expertMsgId: string | null = null;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -206,33 +207,32 @@ export function useAIExpertConnection(
           const chunk = decoder.decode(value, { stream: true });
           aiContent += chunk;
 
+          if (!expertMsgId) {
+            expertMsgId = `ai-${Date.now()}`;
+          }
+
           setMessages((prev) => {
             const last = prev[prev.length - 1];
-            if (last?.sender === 'expert') {
+            if (last?.sender === 'expert' && last.id === expertMsgId) {
               const updated = [...prev];
               updated[updated.length - 1] = { ...last, text: aiContent };
               return updated;
             }
             return [
               ...prev,
-              {
-                id: `ai-${Date.now()}`,
-                sender: 'expert',
-                text: aiContent,
-                timestamp: Date.now(),
-              },
+              { id: expertMsgId!, sender: 'expert', text: aiContent, timestamp: Date.now() },
             ];
           });
         }
 
-        // Final state update after stream completes
+        // Ensure the final AI message exists in state
         setMessages((prev) => {
           const last = prev[prev.length - 1];
-          if (last?.sender === 'expert') return prev;
+          if (last?.sender === 'expert' && last.id === expertMsgId) return prev;
           return [
             ...prev,
             {
-              id: `ai-${Date.now()}`,
+              id: expertMsgId ?? `ai-${Date.now()}`,
               sender: 'expert',
               text: aiContent,
               timestamp: Date.now(),
@@ -242,6 +242,41 @@ export function useAIExpertConnection(
 
         setIsTyping(false);
         setCurrentStep((prev) => prev + 1);
+
+        // Detect if the streamed content is actually an error message
+        // (happens when streamText throws after the response already started streaming).
+        // Use precise patterns to avoid false positives on legitimate AI responses.
+        const looksLikeError =
+          aiContent.startsWith('Error [AI_') ||
+          aiContent.startsWith('AI_InvalidPromptError') ||
+          aiContent.startsWith('AI_TypeValidationError') ||
+          aiContent.includes('InvalidPromptError') ||
+          aiContent.includes('TypeValidationError');
+
+        if (looksLikeError && fallbackScript) {
+          console.warn(
+            'AI stream returned error content, switching to fallback:',
+            aiContent.slice(0, 100),
+          );
+          if (!hasShownFallbackToast.current) {
+            hasShownFallbackToast.current = true;
+            toast.warning('AI returned an error. Using pre-configured responses as fallback.', {
+              duration: 5000,
+            });
+          }
+          // Remove the error message from chat and switch to fallback
+          const msgId = expertMsgId;
+          if (msgId) {
+            setMessages((prev) => prev.filter((m) => m.id !== msgId));
+          }
+          setUseFallback(true);
+          // Skip past the first script greeting if AI already sent one
+          const hasExistingExpert = messagesRef.current.some((m) => m.sender === 'expert');
+          if (hasExistingExpert && fallbackScript[0]?.sender === 'expert') {
+            setFallbackScriptStep(1);
+          }
+          return; // Don't persist the error
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : 'Failed to get AI response';

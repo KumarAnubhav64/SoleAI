@@ -431,11 +431,12 @@ export function useAIExpertConnection(
         completionChecked.current = true;
       }
     } else {
-      // AI mode: mark complete after 2+ expert + 1+ user messages
+      // AI mode: mark complete after a meaningful exchange
+      // (AI greeting + user reply + AI response + user reply + AI wrap-up)
       const expertCount = messages.filter((m) => m.sender === 'expert').length;
       const userCount = messages.filter((m) => m.sender === 'user').length;
 
-      if (expertCount >= 2 && userCount >= 1) {
+      if (expertCount >= 3 && userCount >= 2) {
         dispatchComplete(true);
         completionChecked.current = true;
       }

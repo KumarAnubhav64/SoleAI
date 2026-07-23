@@ -159,7 +159,8 @@ export function useAIExpertConnection(
       const aiMessages: AIChatMessage[] = [
         ...currentMessages.map((m) => ({
           id: m.id,
-          role: m.sender as AIChatRole,
+          // Map our internal 'expert' role to Gemini's 'assistant' role
+          role: m.sender === 'expert' ? ('assistant' as const) : ('user' as const),
           content: m.text,
         })),
         { id: `user-${Date.now()}`, role: 'user' as const, content: text.trim() },

@@ -153,12 +153,14 @@ soleai/
 │   │   └── activity/               # TabContainer, ChatPanel, RecordingControls, etc.
 │   │       └── tabs/               # ScopingTab, RepairTab, QATab
 │   ├── hooks/
-│   │   ├── useMockExpertConnection.ts  # Scripted chat engine
-│   │   ├── useCountdown.ts             # Countdown timer
-│   │   ├── useTabState.ts              # Tab state machine
-│   │   ├── useMediaRecorder.ts         # MediaRecorder abstraction
-│   │   ├── useCameraPermission.ts      # Camera/mic permission handling
-│   │   └── useTextToSpeech.ts          # Speech synthesis (bonus)
+│   │   ├── useAIExpertConnection.ts        # AI-powered chat (Gemini)
+│   │   ├── useMockExpertConnection.ts      # Scripted chat engine (fallback)
+│   │   ├── useCountdown.ts                # Countdown timer
+│   │   ├── useTabState.ts                 # Tab state machine
+│   │   ├── useMediaRecorder.ts            # MediaRecorder abstraction
+│   │   ├── useCameraPermission.ts         # Camera/mic permission handling
+│   │   ├── useTextToSpeech.ts             # Speech synthesis (bonus)
+│   │   └── useHydratedValue.ts            # Hydration-safe SSR value hook
 │   ├── lib/
 │   │   ├── types.ts                # Shared TypeScript types
 │   │   ├── constants.ts            # Named constants (no magic numbers)
@@ -243,7 +245,8 @@ npx playwright test --update-snapshots
 
 - Split-screen layout (chat panel + expert sidebar)
 - 3 sequential lockable tabs: Scoping → Repair → QA
-- Mock expert chat with 1.5–3s artificial delays
+- AI-powered expert chat via Google Gemini (streaming responses)
+- Automatic fallback to script-based responses on AI unavailability
 - MediaRecorder API for video recording
 - Text-to-Speech reads expert messages aloud (toggleable)
 - 10-minute global timer with auto-redirect on expiry

@@ -43,17 +43,17 @@ function ActivityPageInner() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Split-screen workspace */}
-      <div className="flex flex-1 flex-col lg:flex-row">
-        {/* Left Panel — Tab Content */}
-        <div className="flex w-full flex-1 flex-col border-b border-slate-800 lg:border-b-0">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* Left Panel — Tab Content (scrolls independently) */}
+        <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden border-b border-slate-800 lg:border-b-0">
           <TabContainer stream={stream} onAllComplete={handleAllComplete} />
         </div>
 
         {/* Divider line between panels */}
         <div className="hidden w-px shrink-0 bg-gradient-to-b from-slate-700 via-slate-600 to-slate-700 lg:block" />
 
-        {/* Right Panel — Persistent Remote Expert Chat Transcript */}
-        <div className="flex w-full flex-1 flex-col border-t border-slate-800 bg-slate-950/50 lg:border-t-0">
+        {/* Right Panel — Persistent Remote Expert Chat Transcript (scrolls independently) */}
+        <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden border-t border-slate-800 bg-slate-950/50 lg:border-t-0">
           {/* Header */}
           <div className="border-b border-slate-800 px-4 py-2.5">
             <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ function ActivityPageInner() {
           {/* Messages */}
           <div
             ref={rightPanelScrollRef}
-            className="flex-1 space-y-3 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700"
+            className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700"
           >
             <AnimatePresence mode="popLayout">
               {messages.length === 0 && (

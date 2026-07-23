@@ -134,10 +134,10 @@ export function ChatPanel({
         </button>
       </div>
 
-      {/* Messages */}
+      {/* Messages — scroll independently so the input below stays visible */}
       <div
         ref={scrollRef}
-        className="flex-1 space-y-3 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-track-slate-900 scrollbar-thumb-slate-700"
       >
         <AnimatePresence mode="popLayout">
           {messages.length === 0 && (
@@ -207,8 +207,8 @@ export function ChatPanel({
         </AnimatePresence>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-slate-800 p-3">
+      {/* Input — pinned at the bottom */}
+      <div className="shrink-0 border-t border-slate-800 p-3">
         <ChatInput
           onSend={onSend}
           onSimulateSpeech={onSimulateSpeech}

@@ -79,6 +79,69 @@ function persistState(storageKey: 'scoping' | 'qa', messages: ChatMessage[], ste
   saveState(state);
 }
 
+// ─── Chat state reducer (used by useAIExpertConnection) ───
+
+interface ChatState {
+  messages: ChatMessage[];
+  currentStep: number;
+  fallbackScriptStep: number;
+}
+
+type ChatAction =
+  | { type: 'HYDRATE'; messages: ChatMessage[]; step: number }
+  | {
+      type: 'SET_MSGS';
+      messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[]);
+    }
+  | { type: 'ADD_MSG'; updater: (prev: ChatMessage[]) => ChatMessage[] }
+  | { type: 'REMOVE_MSG'; id: string }
+  | { type: 'INC_STEP' }
+  | { type: 'SET_STEP'; step: number }
+  | { type: 'INC_FALLBACK' }
+  | { type: 'SET_FALLBACK'; step: number }
+  | { type: 'RESET' };
+
+const initialChatState: ChatState = {
+  messages: [],
+  currentStep: 0,
+  fallbackScriptStep: 0,
+};
+
+function chatReducer(state: ChatState, action: ChatAction): ChatState {
+  switch (action.type) {
+    case 'HYDRATE':
+      return {
+        messages: action.messages,
+        currentStep: action.step,
+        fallbackScriptStep: action.step,
+      };
+    case 'SET_MSGS':
+      return {
+        ...state,
+        messages:
+          typeof action.messages === 'function'
+            ? (action.messages as (prev: ChatMessage[]) => ChatMessage[])(state.messages)
+            : action.messages,
+      };
+    case 'ADD_MSG':
+      return { ...state, messages: action.updater(state.messages) };
+    case 'REMOVE_MSG':
+      return { ...state, messages: state.messages.filter((m) => m.id !== action.id) };
+    case 'INC_STEP':
+      return { ...state, currentStep: state.currentStep + 1 };
+    case 'SET_STEP':
+      return { ...state, currentStep: action.step };
+    case 'INC_FALLBACK':
+      return { ...state, fallbackScriptStep: state.fallbackScriptStep + 1 };
+    case 'SET_FALLBACK':
+      return { ...state, fallbackScriptStep: action.step };
+    case 'RESET':
+      return initialChatState;
+    default:
+      return state;
+  }
+}
+
 /**
  * A hook that powers the Remote Expert chat with a real AI (Google Gemini),
  * with automatic fallback to script-based mock responses when the AI is
@@ -93,31 +156,29 @@ export function useAIExpertConnection(
   storageKey?: 'scoping' | 'qa',
   fallbackScript?: ChatMessage[],
 ): UseAIExpertConnectionReturn {
-  // Restore persisted messages as initial conversation history
-  const persisted = storageKey ? loadPersistedState(storageKey) : null;
-  const initialMessages: ChatMessage[] = persisted?.messages ?? [];
-  const initialStep = persisted?.step ?? 0;
-
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  // Always start with empty state — SSR-safe. Hydrate from localStorage
+  // in a useEffect (see hydration effect below).
+  const [{ messages, currentStep, fallbackScriptStep }, chatDispatch] = useReducer(
+    chatReducer,
+    initialChatState,
+  );
   const [isTyping, setIsTyping] = useState(false);
   // isComplete uses useReducer so the completion check effect can dispatch
-  // without triggering ESLint's react-hooks/set-state-in-effect rule
+  // without triggering ESLint's react-hooks/set-state-in-effect rule.
+  // Initialize as false — hydration effect will restore if conversation was complete.
   const [isComplete, dispatchComplete] = useReducer(
     (_prev: boolean, value: boolean) => value,
-    // Initialize based on persisted state so resumed conversations
-    // don't flash the button as disabled on refresh
-    initialMessages.length >= 5 && initialStep > 4,
+    false,
   );
-  const [currentStep, setCurrentStep] = useState(initialStep);
   const [error, setError] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
-  const [fallbackScriptStep, setFallbackScriptStep] = useState(initialStep);
 
   const abortRef = useRef<AbortController | null>(null);
   const completionChecked = useRef(false);
   const hasInitialized = useRef(false);
   const hasShownFallbackToast = useRef(false);
-  const messagesRef = useRef<ChatMessage[]>(initialMessages);
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const hydrationDone = useRef(false);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scriptRef = useRef(fallbackScript);
 
@@ -140,6 +201,26 @@ export function useAIExpertConnection(
     };
   }, []);
 
+  // ─── Hydrate from localStorage after first client render ───
+  // This MUST run before the greeting effect (effects execute in definition order).
+  // If persisted messages exist, it restores them and marks hasInitialized
+  // so the greeting effect skips (no duplicate greeting for resumed conversations).
+  useEffect(() => {
+    if (hydrationDone.current) return;
+    hydrationDone.current = true;
+
+    const persisted = storageKey ? loadPersistedState(storageKey) : null;
+    if (persisted && persisted.messages.length > 0) {
+      chatDispatch({ type: 'HYDRATE', messages: persisted.messages, step: persisted.step });
+      // Restore completion state for resumed conversations
+      if (persisted.messages.length >= 5 && persisted.step > 4) {
+        dispatchComplete(true);
+        completionChecked.current = true;
+      }
+      hasInitialized.current = true;
+    }
+  }, [storageKey]);
+
   // ─── Fallback mode: emit the next expert message from the script ───
   const scheduleFallbackExpertEmission = useCallback((scriptStep: number) => {
     const script = scriptRef.current;
@@ -151,9 +232,12 @@ export function useAIExpertConnection(
     const delay = getRandomDelay();
     fallbackTimerRef.current = setTimeout(() => {
       const message = script[scriptStep];
-      setMessages((prev) => [...prev, { ...message, timestamp: Date.now() }]);
+      chatDispatch({
+        type: 'ADD_MSG',
+        updater: (prev) => [...prev, { ...message, timestamp: Date.now() }],
+      });
       setIsTyping(false);
-      setFallbackScriptStep((prev) => prev + 1);
+      chatDispatch({ type: 'INC_FALLBACK' });
     }, delay);
   }, []);
 
@@ -200,9 +284,9 @@ export function useAIExpertConnection(
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, userMsg]);
+      chatDispatch({ type: 'ADD_MSG', updater: (prev) => [...prev, userMsg] });
       setIsTyping(true);
-      setCurrentStep((prev) => prev + 1);
+      chatDispatch({ type: 'INC_STEP' });
 
       try {
         abortRef.current = new AbortController();
@@ -238,37 +322,43 @@ export function useAIExpertConnection(
             expertMsgId = `ai-${Date.now()}`;
           }
 
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (last?.sender === 'expert' && last.id === expertMsgId) {
-              const updated = [...prev];
-              updated[updated.length - 1] = { ...last, text: aiContent };
-              return updated;
-            }
-            return [
-              ...prev,
-              { id: expertMsgId!, sender: 'expert', text: aiContent, timestamp: Date.now() },
-            ];
+          chatDispatch({
+            type: 'SET_MSGS',
+            messages: (prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.sender === 'expert' && last.id === expertMsgId) {
+                const updated = [...prev];
+                updated[updated.length - 1] = { ...last, text: aiContent };
+                return updated;
+              }
+              return [
+                ...prev,
+                { id: expertMsgId!, sender: 'expert', text: aiContent, timestamp: Date.now() },
+              ];
+            },
           });
         }
 
         // Ensure the final AI message exists in state
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.sender === 'expert' && last.id === expertMsgId) return prev;
-          return [
-            ...prev,
-            {
-              id: expertMsgId ?? `ai-${Date.now()}`,
-              sender: 'expert',
-              text: aiContent,
-              timestamp: Date.now(),
-            },
-          ];
+        chatDispatch({
+          type: 'SET_MSGS',
+          messages: (prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.sender === 'expert' && last.id === expertMsgId) return prev;
+            return [
+              ...prev,
+              {
+                id: expertMsgId ?? `ai-${Date.now()}`,
+                sender: 'expert',
+                text: aiContent,
+                timestamp: Date.now(),
+              },
+            ];
+          },
         });
 
         setIsTyping(false);
-        setCurrentStep((prev) => prev + 1);
+        chatDispatch({ type: 'INC_STEP' });
 
         // Detect if the streamed content is actually an error message
         // (happens when streamText throws after the response already started streaming,
@@ -289,23 +379,26 @@ export function useAIExpertConnection(
           // Remove the error message from chat
           const msgId = expertMsgId;
           if (msgId) {
-            setMessages((prev) => prev.filter((m) => m.id !== msgId));
+            chatDispatch({ type: 'REMOVE_MSG', id: msgId });
           }
           // Show a user-friendly notice so the user knows fallback activated
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `fallback-notice-${Date.now()}`,
-              sender: 'expert',
-              text: FALLBACK_NOTICE_MESSAGE,
-              timestamp: Date.now(),
-            },
-          ]);
+          chatDispatch({
+            type: 'ADD_MSG',
+            updater: (prev) => [
+              ...prev,
+              {
+                id: `fallback-notice-${Date.now()}`,
+                sender: 'expert',
+                text: FALLBACK_NOTICE_MESSAGE,
+                timestamp: Date.now(),
+              },
+            ],
+          });
           setUseFallback(true);
           // Skip past the first script greeting if AI already sent one
           const hasExistingExpert = messagesRef.current.some((m) => m.sender === 'expert');
           if (hasExistingExpert && fallbackScript[0]?.sender === 'expert') {
-            setFallbackScriptStep(1);
+            chatDispatch({ type: 'SET_FALLBACK', step: 1 });
           }
           return; // Don't persist the error
         }
@@ -326,19 +419,22 @@ export function useAIExpertConnection(
             );
           }
           // Show a user-friendly notice in chat
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `fallback-notice-${Date.now()}`,
-              sender: 'expert',
-              text: FALLBACK_NOTICE_MESSAGE,
-              timestamp: Date.now(),
-            },
-          ]);
+          chatDispatch({
+            type: 'ADD_MSG',
+            updater: (prev) => [
+              ...prev,
+              {
+                id: `fallback-notice-${Date.now()}`,
+                sender: 'expert',
+                text: FALLBACK_NOTICE_MESSAGE,
+                timestamp: Date.now(),
+              },
+            ],
+          });
           // Advance past the first script greeting if AI already sent one
           const hasExistingExpert = messagesRef.current.some((m) => m.sender === 'expert');
           if (hasExistingExpert && fallbackScript[0]?.sender === 'expert') {
-            setFallbackScriptStep(1);
+            chatDispatch({ type: 'SET_FALLBACK', step: 1 });
           }
           setUseFallback(true);
         }
@@ -368,8 +464,8 @@ export function useAIExpertConnection(
           timestamp: Date.now(),
         };
 
-        setMessages((prev) => [...prev, message]);
-        setFallbackScriptStep((prev) => prev + 1);
+        chatDispatch({ type: 'ADD_MSG', updater: (prev) => [...prev, message] });
+        chatDispatch({ type: 'INC_FALLBACK' });
       } else {
         // AI mode
         sendAIMessage(text);
@@ -382,11 +478,6 @@ export function useAIExpertConnection(
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
-
-    if (messagesRef.current.length > 0) {
-      setCurrentStep(initialStep);
-      return;
-    }
 
     const triggerGreeting = async () => {
       setIsTyping(true);
@@ -410,17 +501,20 @@ export function useAIExpertConnection(
           if (done) break;
           aiContent += decoder.decode(value, { stream: true });
 
-          setMessages([
-            {
-              id: `ai-${Date.now()}`,
-              sender: 'expert',
-              text: aiContent,
-              timestamp: Date.now(),
-            },
-          ]);
+          chatDispatch({
+            type: 'SET_MSGS',
+            messages: [
+              {
+                id: `ai-${Date.now()}`,
+                sender: 'expert',
+                text: aiContent,
+                timestamp: Date.now(),
+              },
+            ],
+          });
         }
 
-        setCurrentStep(1);
+        chatDispatch({ type: 'SET_STEP', step: 1 });
 
         // Also check greeting stream for error content
         if (aiContent.length > 0 && isErrorContent(aiContent)) {
@@ -446,37 +540,46 @@ export function useAIExpertConnection(
           // Show user-friendly notice + first script greeting
           const firstExpertMsg = fallbackScript.find((m) => m.sender === 'expert');
           if (firstExpertMsg) {
-            setMessages([
-              {
-                id: `fallback-notice-${Date.now()}`,
-                sender: 'expert',
-                text: FALLBACK_NOTICE_MESSAGE,
-                timestamp: Date.now(),
-              },
-              { ...firstExpertMsg, timestamp: Date.now() },
-            ]);
+            chatDispatch({
+              type: 'SET_MSGS',
+              messages: [
+                {
+                  id: `fallback-notice-${Date.now()}`,
+                  sender: 'expert',
+                  text: FALLBACK_NOTICE_MESSAGE,
+                  timestamp: Date.now(),
+                },
+                { ...firstExpertMsg, timestamp: Date.now() },
+              ],
+            });
             const firstExpertIdx = fallbackScript.indexOf(firstExpertMsg);
-            setFallbackScriptStep(firstExpertIdx + 1);
+            chatDispatch({ type: 'SET_FALLBACK', step: firstExpertIdx + 1 });
           } else {
-            setMessages([
-              {
-                id: `fallback-notice-${Date.now()}`,
-                sender: 'expert',
-                text: FALLBACK_NOTICE_MESSAGE,
-                timestamp: Date.now(),
-              },
-            ]);
+            chatDispatch({
+              type: 'SET_MSGS',
+              messages: [
+                {
+                  id: `fallback-notice-${Date.now()}`,
+                  sender: 'expert',
+                  text: FALLBACK_NOTICE_MESSAGE,
+                  timestamp: Date.now(),
+                },
+              ],
+            });
           }
         } else {
           // No fallback available — show a generic greeting
-          setMessages([
-            {
-              id: 'ai-fallback',
-              sender: 'expert',
-              text: 'Connection issue detected. Please try sending a message to reconnect.',
-              timestamp: Date.now(),
-            },
-          ]);
+          chatDispatch({
+            type: 'SET_MSGS',
+            messages: [
+              {
+                id: 'ai-fallback',
+                sender: 'expert',
+                text: 'Connection issue detected. Please try sending a message to reconnect.',
+                timestamp: Date.now(),
+              },
+            ],
+          });
         }
       } finally {
         setIsTyping(false);
@@ -484,7 +587,7 @@ export function useAIExpertConnection(
     };
 
     triggerGreeting();
-  }, [systemPrompt, initialStep, fallbackScript, useFallback]);
+  }, [systemPrompt, fallbackScript, useFallback]);
 
   // ─── Completion check (enables 'Complete - Next' button) ───
   // After a meaningful conversation (AI greeting + user reply + AI response +
@@ -555,13 +658,12 @@ export function useAIExpertConnection(
       clearTimeout(fallbackTimerRef.current);
       fallbackTimerRef.current = null;
     }
-    setMessages([]);
+    chatDispatch({ type: 'RESET' });
     setIsTyping(false);
-    setCurrentStep(0);
     setError(null);
     setUseFallback(false);
-    setFallbackScriptStep(0);
     hasInitialized.current = false;
+    hydrationDone.current = false;
     completionChecked.current = false;
     hasShownFallbackToast.current = false;
     dispatchComplete(false);

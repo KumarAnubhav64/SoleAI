@@ -5,13 +5,17 @@ A Next.js proof-of-concept where field technicians configure a job, complete a p
 ## Quick Start
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Run the development server
+# 2. Set up your Google Gemini API key (free, no credit card needed)
+#    Get your key at: https://aistudio.google.com/apikey
+echo 'GOOGLE_GENERATIVE_AI_API_KEY=your_key_here' > .env.local
+
+# 3. Run the development server
 npm run dev
 
-# Open the app
+# 4. Open the app
 open http://localhost:3000
 ```
 
@@ -21,6 +25,8 @@ Then navigate through the 4-phase flow:
 2. **Prep** → Review safety instructions, wait or **Skip & Proceed**
 3. **Activity** → Complete 3 sequential tabs (Scoping Chat → Repair Recording → QA Chat)
 4. **Performance** → Completion screen with job summary
+
+> **Note**: If no Gemini API key is set, or if the AI is rate-limited/unavailable, the app automatically falls back to pre-configured script responses — the flow still works.
 
 ## Architecture
 
@@ -33,9 +39,10 @@ Then navigate through the 4-phase flow:
 | **Animation**           | `motion/react` (Framer Motion)                        | UI transitions, micro-interactions |
 | **Icons**               | `@phosphor-icons/react`                               | Single family, standardized stroke |
 | **Fonts**               | `Geist` + `Geist Mono` via `next/font`                | Modern, clean sans-serif           |
+| **AI Provider**         | Google Gemini 2.5 Flash via Vercel AI SDK v7          | Free tier, no credit card required |
 | **State (cross-phase)** | Cookies (route-guard flags) + localStorage (payload)  | Middleware can't read localStorage |
 | **Testing**             | Vitest + React Testing Library + Playwright           | Fast, native ESM, E2E capability   |
-| **CI**                  | GitHub Actions (lint, typecheck, test)                | Automated quality gates            |
+| **CI**                  | GitHub Actions (lint, typecheck, test, build)         | Automated quality gates            |
 
 ### Server vs. Client Component Boundary
 
@@ -72,15 +79,54 @@ No database — the assignment explicitly permits this:
 - **Abstraction**: `lib/storage.ts` — thin wrapper over localStorage, swappable for a real database later
 - **Save granularity**: Milestone-based (on tab completion), not keystroke-by-keystroke
 
-### Mock Real-Time Chat
+### AI-Powered Real-Time Chat (Primary)
 
-The `useMockExpertConnection` hook simulates a WebSocket/WebRTC data channel:
+The `useAIExpertConnection` hook powers the Remote Expert chat with Google Gemini via the Vercel AI SDK v7:
 
-- Emits expert messages with 1.5–3s artificial delay
-- Tracks `currentStep` in the conversation
-- Supports resume on remount (picks up at last unanswered message)
-- "Simulate Speech" button auto-pulls the next user message from the script
-- Free-form text input also available
+- **Streaming responses**: AI messages are rendered progressively as chunks arrive from the model
+- **Context-aware system prompts**: Each tab builds a targeted prompt from the job config (equipment type, severity level) to guide the AI's role
+- **Natural conversation**: The AI responds dynamically to user input — no pre-scripted messages
+- **LocalStorage persistence**: Chat history survives page refreshes, resuming at the last step
+- **Hydration-safe**: Uses `useHydratedValue` to prevent SSR/CSR mismatches with browser-only APIs (TTS)
+
+### Fallback Mode (Resilience)
+
+When the AI is unavailable, rate-limited, or returns an error, the app gracefully degrades to pre-configured script responses:
+
+- **Automatic detection**: Network errors, rate limits (429), auth failures (401), and schema validation errors all trigger fallback
+- **Seamless switch**: A toast notification informs the user; the chat continues without interruption
+- **Script-based responses**: Expert messages are emitted from the JSON scripts with the same 1.5–3s artificial delay
+- **Visual indicator**: A "Fallback Mode" badge appears in the tab footer so the user knows they're on pre-scripted responses
+- **Multiple error handling layers**:
+  1. API route validates and sanitizes messages before reaching Gemini
+  2. Structured error responses with categorized HTTP status codes (429, 401, 422, 500)
+  3. Hook-level stream detection for errors that leak into the response stream
+
+### System Prompts
+
+Each tab builds a targeted system prompt using the selected job configuration:
+
+**Scoping Assessment**:
+
+```
+You are a Remote Expert System helping a field technician with a Scoping Assessment.
+Equipment: HVAC System
+Severity: Critical Fault
+
+Guide the technician through a structured initial assessment — ask targeted
+questions about symptoms, error codes, recent changes, and environmental factors.
+```
+
+**Quality Assurance**:
+
+```
+You are a Remote Expert System conducting a Quality Assurance follow-up.
+Equipment: Server Rack
+Severity: Routine Maintenance
+
+Ask 1-2 targeted follow-up questions about the repair, confirm resolution,
+and provide a completion confirmation.
+```
 
 ## Project Structure
 
@@ -209,7 +255,21 @@ npx playwright test --update-snapshots
 
 ## Environment Variables
 
-No secrets are required for the current implementation. A `.env.local.example` file is provided for reference. If integrating a real AI backend (Vercel AI SDK + Gemini/Groq), you would add API keys here.
+| Variable                       | Required | Description                                    |
+| ------------------------------ | -------- | ---------------------------------------------- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | ✅ Yes   | Google Gemini API key for the Remote Expert AI |
+
+Get a free API key at [Google AI Studio](https://aistudio.google.com/apikey) — no credit card required. The free tier includes generous rate limits suitable for development and testing.
+
+```bash
+# Set up your key (already gitignored)
+echo 'GOOGLE_GENERATIVE_AI_API_KEY=your_key_here' > .env.local
+
+# Verify it's not tracked by git (should print .env.local)
+git check-ignore .env.local
+```
+
+> **Without the API key**: The app still works! The Remote Expert automatically falls back to pre-configured script responses with a toast notification and "Fallback Mode" badge.
 
 ## Scripts
 
@@ -228,7 +288,45 @@ No secrets are required for the current implementation. A `.env.local.example` f
 
 ### Why no separate backend?
 
-The mock WebSocket simulation runs entirely client-side via the `useMockExpertConnection` hook. Route Handlers (`/api/complete-tab`, `/api/job-config`) exist only where a real API boundary makes sense, keeping the architecture simple while demonstrating proper Server/Client separation.
+The mock WebSocket simulation runs entirely client-side via the `useAIExpertConnection` hook (or the fallback `useMockExpertConnection` pattern). Route Handlers (`/api/chat`, `/api/complete-tab`) exist only where a real API boundary makes sense — the chat route forwards requests to Gemini, and tab completion persists state. This keeps the architecture simple while demonstrating proper Server/Client separation.
+
+### Why Google Gemini + Vercel AI SDK?
+
+- **Free tier**: Google AI Studio provides a generous free API key with no credit card required
+- **Fast inference**: Gemini 2.5 Flash offers low-latency streaming, ideal for real-time chat UX
+- **Vercel AI SDK v7**: The `streamText` API provides standardized streaming across providers, and the `useChat` hook (from `@ai-sdk/react`) simplifies client-side state management. We use a custom fetch-based hook instead for tighter control over the streaming lifecycle and error handling.
+
+### Why a custom hook instead of `useChat`?
+
+Vercel AI SDK v7's `useChat` has a different API surface from v4, and our requirements (progressive message updates during streaming, automatic fallback to scripts, localStorage persistence, abort controller cleanup) needed tighter control than the hook provides. The custom `useAIExpertConnection` hook implements the same interface as the original `useMockExpertConnection`, making the tabs interchangeable.
+
+### Fallback Architecture
+
+The app has a multi-layered error resilience strategy:
+
+```
+User sends message
+    │
+    ▼
+┌─────────────────────────────┐
+│ API Route (validate + send) │──→ 400/422: invalid input
+│ sanitizeMessages() cleans   │──→ 429: rate limited
+│ roles before streamText     │──→ 401: auth failure
+└──────────┬──────────────────┘──→ 500: server error
+           │
+           ▼ (200 + stream)
+┌─────────────────────────────┐
+│ Hook reads stream            │──→ Detect error content
+│ (progressive message update) │    in stream → remove msg,
+└──────────┬──────────────────┘    show toast, switch to
+           │                       fallback mode
+           ▼
+    ┌──────────────┐
+    │ Fallback mode │──→ Emit script messages with 1.5-3s delay
+    │ (if script    │    (same UX as mock expert)
+    │  available)   │
+    └──────────────┘
+```
 
 ### Why cookies + localStorage instead of a database?
 
@@ -236,7 +334,7 @@ The assignment explicitly permits localStorage. Cookies are the only way middlew
 
 ### Why milestone-based saves?
 
-Saving on tab completion (not keystroke-by-keystroke) reduces storage writes, produces a cleaner data model, and still recovers state correctly on page refresh. The conversation step tracking (`currentStep`) ensures the mock expert resumes at the right position.
+Saving on tab completion (not keystroke-by-keystroke) reduces storage writes, produces a cleaner data model, and still recovers state correctly on page refresh. The conversation step tracking (`currentStep`) ensures the expert chat resumes at the right position.
 
 ### Why `flex-1` instead of `h-full` for layout?
 

@@ -14,9 +14,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Gemini requires at least one message. When empty (initial greeting),
+    // seed with a simple user message so the system prompt drives the response.
+    const safeMessages =
+      messages.length === 0 ? [{ role: 'user' as const, content: 'Begin the session.' }] : messages;
+
     const result = await streamText({
       model: google('gemini-2.5-flash'),
-      messages,
+      messages: safeMessages,
       system: systemPrompt,
       temperature: 0.7,
     });

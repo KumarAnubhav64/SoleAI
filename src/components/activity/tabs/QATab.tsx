@@ -5,6 +5,8 @@ import { ChatPanel } from '@/components/activity/ChatPanel';
 import { TabActionButton } from '@/components/activity/TabActionButton';
 import { useAIExpertConnection } from '@/hooks/useAIExpertConnection';
 import { useChatContext } from '@/components/activity/ChatContext';
+import qaScript from '@/data/qa-script.json';
+import type { ChatMessage } from '@/lib/types';
 import { loadState } from '@/lib/storage';
 
 interface QATabProps {
@@ -58,7 +60,8 @@ Do NOT re-scope the problem. This is a confirmation and sign-off step.`;
     isComplete: chatComplete,
     sendMessage,
     simulateSpeech,
-  } = useAIExpertConnection(systemPrompt, 'qa');
+    isFallback,
+  } = useAIExpertConnection(systemPrompt, 'qa', qaScript as ChatMessage[]);
 
   const { syncQAState } = useChatContext();
 
@@ -84,9 +87,16 @@ Do NOT re-scope the problem. This is a confirmation and sign-off step.`;
         />
       </div>
       <div className="flex items-center justify-between border-t border-slate-800 px-4 py-3">
-        <p className="text-xs text-slate-600">
-          Answer the Remote Expert&apos;s follow-up questions to complete the job.
-        </p>
+        <div className="flex items-center gap-2">
+          {isFallback && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-amber-400">
+              Fallback Mode
+            </span>
+          )}
+          <p className="text-xs text-slate-600">
+            Answer the Remote Expert&apos;s follow-up questions to complete the job.
+          </p>
+        </div>
         <TabActionButton
           isLastTab={true}
           isComplete={isComplete}

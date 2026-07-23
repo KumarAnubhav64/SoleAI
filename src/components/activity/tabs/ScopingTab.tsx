@@ -79,7 +79,6 @@ Do NOT ask about unrelated equipment or topics. Stay focused on the ${equipment}
         <ChatPanel
           messages={messages}
           isTyping={isTyping}
-          isComplete={chatComplete}
           onSend={sendMessage}
           onSimulateSpeech={simulateSpeech}
           title="Scoping Assessment"

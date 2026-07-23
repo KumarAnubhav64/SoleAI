@@ -79,7 +79,9 @@ export function useAIExpertConnection(
   // without triggering ESLint's react-hooks/set-state-in-effect rule
   const [isComplete, dispatchComplete] = useReducer(
     (_prev: boolean, value: boolean) => value,
-    false,
+    // Initialize based on persisted state so resumed conversations
+    // don't flash the button as disabled on refresh
+    initialMessages.length >= 5 && initialStep > 4,
   );
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [error, setError] = useState<string | null>(null);

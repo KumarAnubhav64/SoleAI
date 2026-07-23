@@ -80,7 +80,6 @@ Do NOT re-scope the problem. This is a confirmation and sign-off step.`;
         <ChatPanel
           messages={messages}
           isTyping={isTyping}
-          isComplete={chatComplete}
           onSend={sendMessage}
           onSimulateSpeech={simulateSpeech}
           title="Quality Assurance"

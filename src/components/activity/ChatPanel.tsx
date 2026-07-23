@@ -13,7 +13,6 @@ import type { ChatMessage } from '@/lib/types';
 interface ChatPanelProps {
   messages: ChatMessage[];
   isTyping: boolean;
-  isComplete: boolean;
   onSend: (text: string) => void;
   onSimulateSpeech: () => void;
   disabled?: boolean;
@@ -39,9 +38,6 @@ export function ChatPanel({
     isMuted,
     toggleMute,
   } = useTextToSpeech({ rate: 0.9, pitch: 1.0 });
-
-  // isComplete prop is accepted via ChatPanelProps but not destructured —
-  // the user clicks "Complete - Next" at will, no badge needed.
 
   // Hydration-safe TTS support: render as 'available' on server & first client paint,
   // then correct to the real browser capability after hydration.

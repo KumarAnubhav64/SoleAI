@@ -4,6 +4,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatBubble } from './ChatBubble';
 import { ChatInput } from './ChatInput';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DotsThree, SpeakerHigh, SpeakerSlash, CheckCircle } from '@phosphor-icons/react';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useHydratedValue } from '@/hooks/useHydratedValue';
@@ -147,13 +148,38 @@ export function ChatPanel({
               animate={{ opacity: 1 }}
               className="flex h-full flex-col items-center justify-center gap-3"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/50">
-                <DotsThree size={20} className="text-slate-500" weight="bold" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-slate-400">Connecting to Remote Expert</p>
-                <p className="mt-1 text-xs text-slate-600">Establishing secure connection...</p>
-              </div>
+              {isTyping ? (
+                <div className="flex w-full max-w-md flex-col gap-4 px-2">
+                  {/* Expert skeleton bubble (left-aligned) */}
+                  <div className="flex animate-[fadeIn_0.3s_ease-out] items-start gap-3">
+                    <Skeleton className="h-8 w-8 rounded-xl bg-slate-800" />
+                    <div className="flex flex-col gap-1.5">
+                      <Skeleton className="h-4 w-24 rounded-full bg-slate-800" />
+                      <Skeleton className="h-14 w-72 rounded-2xl rounded-tl-[4px] bg-slate-800" />
+                    </div>
+                  </div>
+                  {/* User skeleton bubble (right-aligned) */}
+                  <div className="flex animate-[fadeIn_0.3s_ease-out_0.5s_both] flex-row-reverse items-start gap-3">
+                    <Skeleton className="h-8 w-8 rounded-xl bg-slate-800" />
+                    <div className="flex flex-col gap-1.5">
+                      <Skeleton className="h-4 w-20 rounded-full bg-slate-800" />
+                      <Skeleton className="h-10 w-48 rounded-2xl rounded-tr-[4px] bg-slate-800" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/50 bg-slate-800/50">
+                    <DotsThree size={20} className="text-slate-500" weight="bold" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-slate-400">
+                      Connecting to Remote Expert
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">Establishing secure connection...</p>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 
